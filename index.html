@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPJSTK Monitor Pro - Kontrol Pendaftaran & Keaktifan Peserta</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- D3.js untuk Grafik Statistik Kepesertaan -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <!-- Tone.js untuk Efek Suara Navigasi & Interaksi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            background-color: #f8fafc;
+            color: #020617;
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+        }
+
+        /* Pertebal seluruh teks utama agar tampil lebih tegas & jelas */
+        main p, main span, main label, main td, main th, main button, main select, main input, header span, header button {
+            font-weight: 700 !important;
+        }
+        main h1, main h2, main h3, main h4, main strong, main th, header h1 {
+            font-weight: 800 !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .fade-in {
+            animation: fadeIn 0.25s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blinkCursor {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 12px;
+            background-color: #34d399;
+            margin-left: 2px;
+            animation: blinkCursor 0.8s infinite;
+        }
+        @keyframes runningTextMarquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .running-text-track {
+            display: inline-flex;
+            width: max-content;
+            animation: runningTextMarquee 22s linear infinite;
+        }
+        .running-text-wrapper:hover .running-text-track {
+            animation-play-state: paused;
+        }
+        @keyframes devLogoFloat {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+                filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.35));
+            }
+            50% {
+                transform: translateY(-3px) scale(1.06);
+                filter: drop-shadow(0 6px 10px rgba(52, 211, 153, 0.7));
+            }
+        }
+        @keyframes devLogoShine {
+            0% { transform: translateX(-140%) rotate(25deg); }
+            50%, 100% { transform: translateX(220%) rotate(25deg); }
+        }
+        .dev-logo-animated {
+            animation: devLogoFloat 2.8s ease-in-out infinite;
+        }
+        .dev-logo-box::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 45%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+            animation: devLogoShine 3.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        /* Animasi & Gaya Blok Aneka Warna Dinamis */
+        @keyframes dynamicGradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .dynamic-block {
+            background-size: 200% 200% !important;
+            animation: dynamicGradientFlow 9s ease infinite;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .dynamic-block:hover {
+            transform: translateY(-2px);
+        }
+        .block-vibrant-blue {
+            background-image: linear-gradient(135deg, #eff6ff 0%, #dbeafe 45%, #e0f2fe 100%) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 8px 20px -6px rgba(37, 99, 235, 0.28) !important;
+        }
+        .block-vibrant-emerald {
+            background-image: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 45%, #ccfbf1 100%) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 8px 20px -6px rgba(5, 150, 105, 0.28) !important;
+        }
+        .block-vibrant-amber {
+            background-image: linear-gradient(135deg, #fffbeb 0%, #fef3c7 45%, #ffedd5 100%) !important;
+            border-color: #f59e0b !important;
+            box-shadow: 0 8px 20px -6px rgba(217, 119, 6, 0.28) !important;
+        }
+        .block-vibrant-rose {
+            background-image: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 45%, #fce7f3 100%) !important;
+            border-color: #f43f5e !important;
+            box-shadow: 0 8px 20px -6px rgba(225, 29, 72, 0.28) !important;
+        }
+        .block-vibrant-indigo {
+            background-image: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 45%, #f3e8ff 100%) !important;
+            border-color: #6366f1 !important;
+            box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.25) !important;
+        }
+        .block-vibrant-teal {
+            background-image: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 45%, #e0f2fe 100%) !important;
+            border-color: #14b8a6 !important;
+            box-shadow: 0 8px 20px -6px rgba(13, 148, 136, 0.25) !important;
+        }
+
+        /* Tema Warna Dinamis Halaman (Warna Pekat, Tegas & Prioritas Tinggi) */
+        body.theme-emerald #sidebar { background-color: #022c22 !important; border-color: #059669 !important; }
+        body.theme-emerald #mainArea { background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%) !important; }
+        body.theme-emerald header { background-color: #ecfdf5 !important; border-color: #10b981 !important; }
+
+        body.theme-blue #sidebar { background-color: #172554 !important; border-color: #2563eb !important; }
+        body.theme-blue #mainArea { background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%) !important; }
+        body.theme-blue header { background-color: #eff6ff !important; border-color: #2563eb !important; }
+        body.theme-blue #primaryAddBtn { background-image: linear-gradient(to right, #1d4ed8, #0284c7) !important; }
+
+        body.theme-indigo #sidebar { background-color: #1e1b4b !important; border-color: #4f46e5 !important; }
+        body.theme-indigo #mainArea { background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%) !important; }
+        body.theme-indigo header { background-color: #eef2ff !important; border-color: #4f46e5 !important; }
+        body.theme-indigo #primaryAddBtn { background-image: linear-gradient(to right, #4338ca, #7c3aed) !important; }
+
+        body.theme-amber #sidebar { background-color: #451a03 !important; border-color: #d97706 !important; }
+        body.theme-amber #mainArea { background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%) !important; }
+        body.theme-amber header { background-color: #fffbeb !important; border-color: #d97706 !important; }
+        body.theme-amber #primaryAddBtn { background-image: linear-gradient(to right, #b45309, #ea580c) !important; }
+
+        body.theme-dark #sidebar { background-color: #020617 !important; border-color: #334155 !important; }
+        body.theme-dark #mainArea { background: #090d16 !important; color: #f8fafc !important; }
+        body.theme-dark header { background-color: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; }
+        body.theme-dark header h1 { color: #ffffff !important; }
+        body.theme-dark header #masehiDateText { color: #e2e8f0 !important; }
+        body.theme-dark header #hijriDateText { background-color: #134e4a !important; color: #5eead4 !important; border-color: #0f766e !important; }
+        body.theme-dark header .bg-slate-100 { background-color: #1e293b !important; border-color: #475569 !important; color: #f8fafc !important; }
+
+        body.theme-dark main .bg-white,
+        body.theme-dark main .dynamic-block {
+            background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+        }
+        body.theme-dark main h3,
+        body.theme-dark main h4,
+        body.theme-dark main strong,
+        body.theme-dark main td,
+        body.theme-dark main th { color: #ffffff !important; }
+        body.theme-dark main p,
+        body.theme-dark main span,
+        body.theme-dark main label { color: #e2e8f0 !important; }
+
+        /* Perbaikan kontras kartu jadwal sholat di Mode Gelap */
+        body.theme-dark #prayerTimesGrid > div {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+        }
+        body.theme-dark #prayerTimesGrid > div span:first-child { color: #94a3b8 !important; }
+        body.theme-dark #prayerTimesGrid > div span:last-child { color: #34d399 !important; }
+
+        /* Perbaikan kontras badge/tombol putih di dalam kartu & kelurahan saat Mode Gelap */
+        body.theme-dark main .bg-white\/80,
+        body.theme-dark main .bg-white\/85,
+        body.theme-dark main .bg-white\/95,
+        body.theme-dark main .bg-white\/60,
+        body.theme-dark main .bg-slate-50,
+        body.theme-dark main .bg-slate-100,
+        body.theme-dark main .bg-teal-50 {
+            background-color: #0f172a !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+        }
+        body.theme-dark #korcabGrid button {
+            background-color: #0f172a !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+        body.theme-dark #korcabGrid button:hover {
+            background-color: #1e293b !important;
+            border-color: #34d399 !important;
+        }
+
+        /* Perbaikan kontras grafik D3 di Mode Gelap */
+        body.theme-dark #statusDonutChart,
+        body.theme-dark #kecamatanBarChart {
+            background-color: #0f172a !important;
+            border: 1px solid #334155 !important;
+        }
+        body.theme-dark #statusDonutChart text,
+        body.theme-dark #kecamatanBarChart text {
+            fill: #f8fafc !important;
+        }
+        body.theme-dark #kecamatanBarChart path,
+        body.theme-dark #kecamatanBarChart line {
+            stroke: #64748b !important;
+        }
+
+        /* Perbaikan kontras input, select, dan tabel di Mode Gelap */
+        body.theme-dark main input,
+        body.theme-dark main select {
+            background-color: #0f172a !important;
+            border-color: #64748b !important;
+            color: #ffffff !important;
+        }
+        body.theme-dark main input::placeholder { color: #94a3b8 !important; }
+        body.theme-dark main thead tr { background-color: #020617 !important; border-color: #475569 !important; }
+        body.theme-dark main tbody tr { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.theme-dark main tbody tr:hover { background-color: #273549 !important; }
+
+        /* Perbaikan kontras badge status & tombol aksi tabel di Mode Gelap */
+        body.theme-dark main .bg-emerald-100 { background-color: #064e3b !important; color: #6ee7b7 !important; border-color: #10b981 !important; }
+        body.theme-dark main .bg-amber-100 { background-color: #78350f !important; color: #fcd34d !important; border-color: #f59e0b !important; }
+        body.theme-dark main .bg-rose-100 { background-color: #881337 !important; color: #fda4af !important; border-color: #f43f5e !important; }
+        body.theme-dark main .bg-indigo-100 { background-color: #312e81 !important; color: #c7d2fe !important; }
+        body.theme-dark main .bg-teal-100 { background-color: #134e4a !important; color: #5eead4 !important; }
+        body.theme-dark main .bg-emerald-50 { background-color: #064e3b !important; color: #6ee7b7 !important; border-color: #059669 !important; }
+        body.theme-dark main .bg-amber-50 { background-color: #78350f !important; color: #fcd34d !important; border-color: #d97706 !important; }
+        body.theme-dark main .bg-rose-50 { background-color: #881337 !important; color: #fda4af !important; border-color: #e11d48 !important; }
+    </style>
+    <script>
+        window.toggleSidebar = function () {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.toggle('-translate-x-full');
+            if (backdrop) backdrop.classList.toggle('hidden');
+        };
+    </script>
+</head>
+<body class="text-slate-900 bg-slate-50 antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div class="flex min-h-screen lg:h-screen w-full max-w-full overflow-x-hidden lg:overflow-hidden">
+        <!-- Mobile Sidebar Backdrop -->
+        <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-20 hidden lg:hidden"></div>
+
+        <!-- Sidebar Navigasi (Bersih & Kontras Tinggi) -->
+        <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 max-w-[85vw] bg-emerald-950 text-white z-30 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col shadow-xl border-r border-emerald-900 shrink-0">
+
+            <!-- Brand Header -->
+            <div class="p-6 flex items-center justify-between border-b border-emerald-900">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 text-white">
+                        <i class="fas fa-shield-alt text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-lg font-extrabold tracking-tight brand-font block leading-none text-white">BPJSTK<span class="text-emerald-300">Pro</span></span>
+                        <span class="text-[11px] text-emerald-200 font-semibold tracking-wider uppercase mt-1 block">Koordinator Akuisisi</span>
+                    </div>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden text-emerald-200 hover:text-white p-1">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Menu Navigasi -->
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+                <p class="px-3 text-[11px] font-bold text-emerald-300 uppercase tracking-wider mb-2">Kontrol Utama</p>
+                
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center justify-between bg-emerald-600/30 text-white border border-emerald-400/50 px-4 py-3 rounded-xl font-semibold transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chart-line w-5 text-center text-emerald-300"></i>
+                        <span>Dashboard Akuisisi</span>
+                    </div>
+                </button>
+
+                <button onclick="switchTab('verifikasi')" id="nav-verifikasi" class="nav-btn w-full flex items-center justify-between text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-user-clock w-5 text-center text-amber-300"></i>
+                        <span>Antrean Verifikasi</span>
+                    </div>
+                    <span id="badge-verifikasi" class="bg-amber-400 text-slate-950 text-xs font-extrabold px-2 py-0.5 rounded-full">0</span>
+                </button>
+
+                <button onclick="switchTab('tunggakan')" id="nav-tunggakan" class="nav-btn w-full flex items-center justify-between text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle w-5 text-center text-rose-300"></i>
+                        <span>Pantau Tunggakan</span>
+                    </div>
+                    <span id="badge-tunggakan" class="bg-rose-500 text-white text-xs font-extrabold px-2 py-0.5 rounded-full">0</span>
+                </button>
+
+                <button onclick="switchTab('korcab')" id="nav-korcab" class="nav-btn w-full flex items-center justify-between text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-map-marked-alt w-5 text-center text-teal-300"></i>
+                        <span>Koordinator Kecamatan</span>
+                    </div>
+                    <span id="badge-korcab" class="bg-teal-500/30 text-teal-200 border border-teal-400/40 text-xs font-extrabold px-2 py-0.5 rounded-full">6</span>
+                </button>
+
+                <p class="px-3 text-[11px] font-bold text-emerald-300 uppercase tracking-wider mt-6 mb-2">Alat Koordinator</p>
+
+                <button onclick="exportToCSV()" class="w-full flex items-center gap-3 text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fas fa-file-csv w-5 text-center text-sky-300"></i>
+                    <span>Unduh Laporan (CSV)</span>
+                </button>
+
+                <button onclick="downloadJSON()" class="w-full flex items-center gap-3 text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fas fa-file-export w-5 text-center text-emerald-300"></i>
+                    <span>Download Backup (JSON)</span>
+                </button>
+
+                <button onclick="triggerImportJSON()" class="w-full flex items-center gap-3 text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fas fa-file-import w-5 text-center text-amber-300"></i>
+                    <span>Update / Impor (JSON)</span>
+                </button>
+                <input type="file" id="jsonFileInput" accept=".json,application/json" onchange="handleImportJSON(event)" class="hidden">
+
+                <button onclick="openTargetModal()" class="w-full flex items-center gap-3 text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fas fa-bullseye w-5 text-center text-purple-300"></i>
+                    <span>Atur Target Akuisisi</span>
+                </button>
+
+                <button onclick="openSchoolModal()" class="w-full flex items-center gap-3 text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fas fa-school w-5 text-center text-emerald-300"></i>
+                    <span>Tambah Lembaga SPS/PAUD</span>
+                </button>
+
+                <button onclick="playNavSound('click', 'Membuka menu kirim HTML Mode Baca dan Mode Admin'); openShareHtmlModal()" class="w-full flex items-center gap-3 text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition">
+                    <i class="fas fa-share-square w-5 text-center text-cyan-300"></i>
+                    <span>Kirim HTML (Baca & Admin)</span>
+                </button>
+            </nav>
+
+            <!-- Info Profil Koordinator -->
+            <div class="p-4 m-4 mb-2 rounded-2xl bg-emerald-900/90 border border-emerald-700/80">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <img src="https://ui-avatars.com/api/?name=Koordinator+BPJS&background=10b981&color=fff&bold=true" alt="Koordinator" class="w-10 h-10 rounded-full ring-2 ring-emerald-400">
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-emerald-950 rounded-full"></span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-bold truncate text-white">Koordinator Wilayah</p>
+                        <p class="text-xs font-medium text-emerald-200 truncate">6 Kecamatan • 67 Kelurahan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Logo Pengembang di Pojok Kiri Bawah -->
+            <div class="px-4 pb-4 pt-1">
+                <div class="p-3 rounded-2xl bg-emerald-900/90 border border-emerald-500/60">
+                    <div id="devLogoHeaderBar" class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-200 flex items-center gap-1.5">
+                            <i class="fas fa-lock text-emerald-300"></i>
+                            <span>Logo Pengembang Permanen</span>
+                        </span>
+                        <button type="button" id="downloadEmbeddedHtmlBtn" onclick="downloadEmbeddedHtml()" class="hidden text-[10px] font-bold text-emerald-950 bg-emerald-300 hover:bg-emerald-200 px-2 py-0.5 rounded transition" title="Unduh File HTML dengan Logo Tertanam Permanen">
+                            <i class="fas fa-download mr-0.5"></i> Tanam Logo HTML
+                        </button>
+                    </div>
+
+                    <div id="devLogoCard" onclick="triggerDeveloperLogoUpload()" class="cursor-pointer group flex items-center gap-3 p-2.5 rounded-xl bg-white hover:bg-slate-50 border-2 border-dashed border-emerald-400 hover:border-emerald-600 transition shadow-sm">
+                        <div class="dev-logo-box relative w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                            <!-- Default Logo SVG Simple Program -->
+                            <svg id="devLogoDefaultSvg" class="dev-logo-animated w-9 h-9" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Default Simple Program">
+                                <defs>
+                                    <linearGradient id="spLogoGrad" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#059669"/>
+                                        <stop offset="100%" stop-color="#0284c7"/>
+                                    </linearGradient>
+                                </defs>
+                                <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#spLogoGrad)"/>
+                                <path d="M23 22L14 32L23 42" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M41 22L50 32L41 42" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M35 19L29 45" stroke="#A7F3D0" stroke-width="4" stroke-linecap="round"/>
+                            </svg>
+                            <img id="devLogoPreview" src="" alt="Logo Pengembang" style="display: none;" class="dev-logo-animated w-full h-full object-contain p-1 bg-white">
+                        </div>
+                        <div class="overflow-hidden flex-1">
+                            <p id="devLogoLabel" class="text-xs font-extrabold text-slate-900 group-hover:text-emerald-700 truncate">Simple Program</p>
+                            <p id="devLogoSubtext" class="text-[10px] font-semibold text-emerald-700 truncate">Klik sekali untuk tanam logo permanen</p>
+                        </div>
+                    </div>
+                    <input type="file" id="devLogoInput" accept="image/*" onchange="handleDeveloperLogoUpload(event)" class="hidden">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Area Konten Utama (Bersih & Kontras Tinggi) -->
+        <div id="mainArea" class="flex-1 min-w-0 flex flex-col min-h-screen lg:h-screen overflow-x-hidden lg:overflow-hidden bg-slate-50 transition-colors duration-300">
+
+            <!-- Header Topbar -->
+            <header class="bg-white border-b border-slate-200 px-3.5 sm:px-6 lg:px-8 py-3 sm:py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0 z-10 shadow-sm w-full">
+                <div class="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0 flex-1 w-full">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition shrink-0" title="Buka Menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 items-center justify-center shadow-md shadow-emerald-600/20 text-white shrink-0">
+                        <i class="fas fa-shield-alt text-lg"></i>
+                    </div>
+                    <div class="min-w-0 flex-1 w-full">
+                        <div class="flex flex-col xl:flex-row xl:items-center gap-1.5 xl:gap-3 min-w-0 w-full">
+                            <h1 class="text-sm sm:text-lg lg:text-xl font-extrabold text-slate-950 leading-snug break-words">Sistem Kontrol Kepesertaan BPJSTK</h1>
+                            <div class="running-text-wrapper relative overflow-hidden flex items-center gap-2 px-2.5 py-1 rounded-xl bg-emerald-950 text-emerald-200 border border-emerald-700 shadow-sm w-full xl:max-w-md">
+                                <span class="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-950 bg-emerald-400 px-2 py-0.5 rounded-md shrink-0 z-10">
+                                    <i class="fas fa-terminal text-[9px]"></i>
+                                    <span>Info</span>
+                                </span>
+                                <div class="overflow-hidden flex-1 whitespace-nowrap">
+                                    <div class="running-text-track text-[11px] font-mono font-bold tracking-wide text-emerald-200">
+                                        <span class="pr-10">Aplikasi dibuat oleh Simple Program • Email: simpleprogram77@gmail.com • WA: 085946982520</span>
+                                        <span class="pr-10" aria-hidden="true">Aplikasi dibuat oleh Simple Program • Email: simpleprogram77@gmail.com • WA: 085946982520</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-700 mt-1.5">
+                            <span class="inline-flex items-center gap-1 font-semibold text-slate-800">
+                                <i class="far fa-calendar-alt text-emerald-600"></i>
+                                <span id="masehiDateText">Memuat tanggal...</span>
+                            </span>
+                            <span class="text-slate-400 hidden sm:inline">•</span>
+                            <span class="inline-flex items-center gap-1 font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                                <i class="fas fa-moon text-[10px]"></i>
+                                <span id="hijriDateText">Memuat Hijriyah...</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-200/70">
+                    <!-- Badge Indikator Mode Akses (Baca / Admin) -->
+                    <span id="accessModeBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                        <i class="fas fa-user-shield text-emerald-700"></i>
+                        <span>Mode Admin</span>
+                    </span>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Pemilih Tema Warna Halaman -->
+                        <div class="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-300" title="Ganti Tema Warna Halaman">
+                            <i class="fas fa-palette text-xs text-slate-600 mr-0.5 hidden sm:inline"></i>
+                            <button type="button" onclick="setPageTheme('dark')" data-theme-btn="dark" class="theme-dot w-5 h-5 rounded-full bg-slate-900 border border-slate-500 ring-2 ring-offset-1 ring-slate-900 transition transform hover:scale-110" title="Tema Hitam / Mode Gelap (Default)"></button>
+                            <button type="button" onclick="setPageTheme('emerald')" data-theme-btn="emerald" class="theme-dot w-5 h-5 rounded-full bg-emerald-600 transition transform hover:scale-110" title="Tema Hijau Zamrud"></button>
+                            <button type="button" onclick="setPageTheme('blue')" data-theme-btn="blue" class="theme-dot w-5 h-5 rounded-full bg-blue-600 transition transform hover:scale-110" title="Tema Biru Samudra"></button>
+                            <button type="button" onclick="setPageTheme('indigo')" data-theme-btn="indigo" class="theme-dot w-5 h-5 rounded-full bg-indigo-600 transition transform hover:scale-110" title="Tema Indigo Modern"></button>
+                            <button type="button" onclick="setPageTheme('amber')" data-theme-btn="amber" class="theme-dot w-5 h-5 rounded-full bg-amber-600 transition transform hover:scale-110" title="Tema Emas Hangat"></button>
+                        </div>
+
+                        <button onclick="toggleSound()" id="soundToggleBtn" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition flex items-center justify-center" title="Suara & Ucapan Navigasi Aktif">
+                            <i id="soundIcon" class="fas fa-volume-up text-emerald-600"></i>
+                        </button>
+                    </div>
+
+                    <button id="primaryAddBtn" onclick="playNavSound('click', 'Membuka formulir pendaftaran peserta baru'); openModal()" class="w-full sm:w-auto justify-center bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition shadow-md shadow-emerald-600/20 active:scale-95">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Daftarkan Peserta Baru</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Kontainer Konten Utama yang Dapat Digulir -->
+            <main class="flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 w-full max-w-full">
+
+                <!-- Banner Ucapan Selamat Datang & Salam Koordinator -->
+                <div id="welcomeGreetingBanner" class="dynamic-block block-vibrant-emerald rounded-2xl p-4 sm:p-5 shadow-sm border-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 fade-in">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xl shrink-0 shadow-md">
+                            <i class="fas fa-hand-sparkles"></i>
+                        </div>
+                        <div>
+                            <h3 id="welcomeGreetingTitle" class="text-sm sm:text-base font-extrabold text-emerald-950">Assalamu'alaikum & Selamat Bertugas, Koordinator Wilayah!</h3>
+                            <p class="text-xs text-emerald-900 mt-0.5">Terima kasih atas dedikasi Anda mengawal perlindungan jaminan sosial ketenagakerjaan bagi seluruh tenaga pendidik & peserta di 6 Kecamatan, 67 Kelurahan.</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('welcomeGreetingBanner').classList.add('hidden')" class="self-end sm:self-center text-xs font-extrabold text-emerald-900 bg-white/80 hover:bg-white px-3 py-1.5 rounded-xl border border-emerald-300 transition shrink-0">
+                        Tutup Ucapan
+                    </button>
+                </div>
+
+                <!-- Widget Jadwal Sholat -->
+                <div class="dynamic-block block-vibrant-teal rounded-2xl p-4 sm:p-5 shadow-sm border-2 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center justify-between sm:justify-start gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg shrink-0 border border-emerald-200">
+                                <i class="fas fa-mosque"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-extrabold text-slate-900">Jadwal Sholat</h3>
+                                    <span id="liveClock" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300">00:00:00</span>
+                                </div>
+                                <p class="text-[11px] font-medium text-slate-600">Standar Kemenag RI • Waktu Setempat</p>
+                            </div>
+                        </div>
+
+                        <select id="cityPrayerSelect" onchange="fetchPrayerTimes()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Serang" selected>Kota Serang (Banten)</option>
+                            <option value="Cilegon">Kota Cilegon</option>
+                            <option value="Tangerang">Kota Tangerang</option>
+                            <option value="Jakarta">DKI Jakarta</option>
+                            <option value="Bandung">Kota Bandung</option>
+                            <option value="Semarang">Kota Semarang</option>
+                            <option value="Yogyakarta">DI Yogyakarta</option>
+                            <option value="Klaten">Kab. Klaten</option>
+                            <option value="Surabaya">Kota Surabaya</option>
+                        </select>
+                    </div>
+
+                    <div id="prayerTimesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 flex-1 xl:max-w-2xl w-full">
+                        <div class="bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-center">
+                            <span class="block text-[10px] font-extrabold uppercase text-slate-700">Imsak</span>
+                            <span id="time-Imsak" class="text-xs sm:text-sm font-mono font-extrabold text-slate-900">04:22</span>
+                        </div>
+                        <div class="bg-sky-50 border border-sky-200 rounded-xl px-3 py-2 text-center">
+                            <span class="block text-[10px] font-extrabold uppercase text-sky-700">Subuh</span>
+                            <span id="time-Fajr" class="text-xs sm:text-sm font-mono font-extrabold text-sky-900">04:32</span>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-center">
+                            <span class="block text-[10px] font-extrabold uppercase text-amber-700">Dzuhur</span>
+                            <span id="time-Dhuhr" class="text-xs sm:text-sm font-mono font-extrabold text-amber-900">11:55</span>
+                        </div>
+                        <div class="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2 text-center">
+                            <span class="block text-[10px] font-extrabold uppercase text-orange-700">Ashar</span>
+                            <span id="time-Asr" class="text-xs sm:text-sm font-mono font-extrabold text-orange-900">15:16</span>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 text-center">
+                            <span class="block text-[10px] font-extrabold uppercase text-rose-700">Maghrib</span>
+                            <span id="time-Maghrib" class="text-xs sm:text-sm font-mono font-extrabold text-rose-900">17:58</span>
+                        </div>
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-2 text-center">
+                            <span class="block text-[10px] font-extrabold uppercase text-indigo-700">Isya</span>
+                            <span id="time-Isha" class="text-xs sm:text-sm font-mono font-extrabold text-indigo-900">19:10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Kartu Statistik Utama -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="dynamic-block block-vibrant-blue p-5 rounded-2xl shadow-sm border-2 transition">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-extrabold uppercase tracking-wider text-blue-900">Total Database Peserta</p>
+                                <h3 class="text-3xl font-extrabold text-blue-950 mt-2" id="stat-total">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center text-xl shadow-md shadow-blue-500/30">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-blue-200/80 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-blue-900">6 Kecamatan • 67 Kelurahan</span>
+                            <span class="font-extrabold text-blue-800 bg-white/80 px-2 py-0.5 rounded-md" id="stat-segmen-info">PU & BPU</span>
+                        </div>
+                    </div>
+
+                    <div class="dynamic-block block-vibrant-emerald p-5 rounded-2xl shadow-sm border-2 transition">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-extrabold uppercase tracking-wider text-emerald-900">Aktif (Iuran Lancar)</p>
+                                <h3 class="text-3xl font-extrabold text-emerald-950 mt-2" id="stat-aktif">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/30">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-emerald-200/80 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-emerald-900">Rasio Keaktifan</span>
+                            <span class="font-extrabold text-emerald-900 bg-white/80 px-2 py-0.5 rounded-md" id="stat-rasio-aktif">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="dynamic-block block-vibrant-amber p-5 rounded-2xl shadow-sm border-2 transition">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-extrabold uppercase tracking-wider text-amber-900">Proses Verifikasi</p>
+                                <h3 class="text-3xl font-extrabold text-amber-950 mt-2" id="stat-proses">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/30">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-amber-200/80 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-amber-900">Follow-Up Kode Iuran</span>
+                            <button onclick="switchTab('verifikasi')" class="font-extrabold text-amber-900 bg-white/80 hover:bg-white px-2 py-0.5 rounded-md transition">Cek Antrean &rarr;</button>
+                        </div>
+                    </div>
+
+                    <div class="dynamic-block block-vibrant-rose p-5 rounded-2xl shadow-sm border-2 transition">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-extrabold uppercase tracking-wider text-rose-900">Menunggak / Non-Aktif</p>
+                                <h3 class="text-3xl font-extrabold text-rose-950 mt-2" id="stat-tunggak">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-600 to-pink-500 text-white flex items-center justify-center text-xl shadow-md shadow-rose-500/30">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-rose-200/80 flex items-center justify-between text-xs">
+                            <span class="font-semibold text-rose-900">Perlu Pengingat Iuran</span>
+                            <button onclick="switchTab('tunggakan')" class="font-extrabold text-rose-900 bg-white/80 hover:bg-white px-2 py-0.5 rounded-md transition">Tindak Lanjut &rarr;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Rekap 6 Koordinator Kecamatan & Daftar Kelurahan/Desa -->
+                <div id="korcabSection" class="space-y-4 fade-in scroll-mt-6">
+                    <div class="dynamic-block block-vibrant-indigo p-5 rounded-2xl shadow-sm border-2">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="px-2.5 py-0.5 rounded-md bg-teal-700 text-white text-[10px] font-extrabold uppercase tracking-wider">6 Koordinator Kecamatan</span>
+                                    <h3 class="font-extrabold text-slate-900 text-base">
+                                        Monitoring Akuisisi & Keaktifan Wilayah Kecamatan & Kelurahan/Desa
+                                    </h3>
+                                </div>
+                                <p class="text-xs font-medium text-slate-600 mt-1">Klik kartu kecamatan untuk memfilter per kecamatan, atau klik label <strong class="text-slate-900">Kelurahan/Desa</strong> di dalam kartu untuk memfilter per kelurahan</p>
+                            </div>
+                            <button onclick="filterByKorcab('Semua', true)" class="text-xs font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-300 px-3.5 py-2 rounded-xl transition">
+                                <i class="fas fa-layer-group mr-1"></i>Tampilkan Semua Kecamatan
+                            </button>
+                        </div>
+                        <div id="korcabGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- Kartu Koordinator Kecamatan & Daftar Kelurahan dirender oleh JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grafik Visualisasi Kepesertaan (D3.js) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="dynamic-block block-vibrant-emerald p-5 rounded-2xl shadow-sm border-2 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                                <i class="fas fa-chart-pie text-emerald-700"></i>
+                                <span>Komposisi Status Peserta</span>
+                            </h3>
+                            <p class="text-xs font-medium text-slate-700 mt-0.5">Perbandingan peserta aktif, verifikasi, dan tunggakan</p>
+                        </div>
+                        <div id="statusDonutChart" class="w-full h-56 flex items-center justify-center my-2 bg-white/75 rounded-xl p-2"></div>
+                        <div id="statusDonutLegend" class="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-emerald-200"></div>
+                    </div>
+
+                    <div class="lg:col-span-2 dynamic-block block-vibrant-blue p-5 rounded-2xl shadow-sm border-2 flex flex-col justify-between">
+                    <div class="lg:col-span-2 dynamic-block block-vibrant-blue p-5 rounded-2xl shadow-sm border-2 flex flex-col justify-between min-w-0">
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                                    <i class="fas fa-chart-bar text-blue-700"></i>
+                                    <span>Grafik Akuisisi & Keaktifan per Koordinator Kecamatan</span>
+                                </h3>
+                                <p class="text-xs font-medium text-slate-700 mt-0.5">Klik batang kecamatan untuk memfilter daftar anggota di wilayah tersebut</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-bold bg-white/80 px-3 py-1 rounded-xl border border-blue-200">
+                                <span class="inline-flex items-center gap-1.5 text-slate-800"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>Aktif</span>
+                                <span class="inline-flex items-center gap-1.5 text-slate-800"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>Proses</span>
+                                <span class="inline-flex items-center gap-1.5 text-slate-800"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span>Tunggak/Non-Aktif</span>
+                            </div>
+                        </div>
+                        <div id="kecamatanBarChart" class="w-full h-64 mt-3 bg-white/80 rounded-xl p-2 overflow-hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Bar Filter & Pencarian Cerdas -->
+                <div class="dynamic-block block-vibrant-amber p-4 sm:p-5 rounded-2xl shadow-sm border-2 flex flex-col gap-3.5 w-full">
+                    <div class="relative w-full">
+                        <i class="fas fa-search absolute left-3.5 top-3.5 text-slate-500"></i>
+                        <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="Cari Nama Peserta, NIK, Nomor KPJ, Kelurahan, atau Lembaga PAUD/SPS..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-900 placeholder-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 w-full">
+                        <select id="segmenFilter" onchange="renderTable()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Semua">Semua Segmen</option>
+                            <option value="PU">PU (Penerima Upah)</option>
+                            <option value="BPU">BPU (Mandiri)</option>
+                        </select>
+
+                        <select id="kecamatanFilter" onchange="onKecamatanFilterChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Semua">Semua Kecamatan</option>
+                        </select>
+
+                        <select id="kelurahanFilter" onchange="onKelurahanFilterChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Semua">Semua Kelurahan/Desa</option>
+                        </select>
+
+                        <select id="schoolFilter" onchange="renderTable()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Semua">Semua Satuan SPS / PAUD</option>
+                        </select>
+
+                        <select id="statusFilter" onchange="renderTable()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Semua">Semua Status</option>
+                            <option value="Aktif">Aktif (Lancar)</option>
+                            <option value="Proses Verifikasi">Proses Verifikasi</option>
+                            <option value="Menunggak">Menunggak Iuran</option>
+                            <option value="Non-Aktif">Non-Aktif</option>
+                        </select>
+
+                        <button onclick="resetFilters()" class="w-full px-3.5 py-2.5 text-slate-700 hover:text-slate-950 bg-white/80 hover:bg-white rounded-xl text-xs sm:text-sm font-semibold transition border border-slate-300 flex items-center justify-center gap-1.5" title="Reset Filter">
+                            <i class="fas fa-undo"></i>
+                            <span>Reset Filter</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabel Data Kepesertaan BPJS Ketenagakerjaan -->
+                <div id="memberTableSection" class="bg-white rounded-2xl shadow-md border-2 border-indigo-400 overflow-hidden scroll-mt-6 w-full">
+                    <div class="dynamic-block block-vibrant-indigo px-4 sm:px-6 py-4 border-b-2 border-indigo-300 flex flex-wrap justify-between items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse shrink-0"></span>
+                            <h3 class="font-extrabold text-indigo-950 text-sm sm:text-base" id="tableHeaderTitle">Daftar Seluruh Peserta Terdaftar</h3>
+                        </div>
+                        <span class="text-xs font-extrabold text-indigo-900 bg-white/85 px-3 py-1 rounded-lg border border-indigo-200" id="tableCountInfo">Menampilkan 0 data</span>
+                    </div>
+
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full min-w-[780px] text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 text-[11px] font-extrabold uppercase tracking-wider">
+                                    <th class="py-3.5 px-6">Identitas Peserta (NIK & KPJ)</th>
+                                    <th class="py-3.5 px-4">Wilayah & Segmen</th>
+                                    <th class="py-3.5 px-4">Alur Pendaftaran</th>
+                                    <th class="py-3.5 px-4">Keaktifan Iuran</th>
+                                    <th class="py-3.5 px-4">Status</th>
+                                    <th class="py-3.5 px-6 text-right">Kontrol & Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="memberTableBody" class="divide-y divide-slate-200 text-sm">
+                                <!-- Baris dirender dinamis oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL 1: Tambah / Edit Peserta -->
+    <div id="memberModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden fade-in">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 flex justify-between items-center text-white">
+                <div class="flex items-center gap-2.5">
+                    <i class="fas fa-id-card-alt text-xl"></i>
+                    <h3 class="text-lg font-bold" id="modalTitle">Formulir Pendaftaran Peserta Baru</h3>
+                </div>
+                <button onclick="closeModal()" class="text-white/80 hover:text-white p-1 rounded-lg">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <form id="memberForm" onsubmit="saveMember(event)" class="p-6 space-y-5 max-h-[85vh] overflow-y-auto">
+                <input type="hidden" id="memberId">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Nama Lengkap (Sesuai KTP) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="memberName" required placeholder="Contoh: Ahmad Subagja" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">NIK (16 Digit KTP) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="memberNik" required maxlength="16" pattern="[0-9]{16}" title="Masukkan 16 digit angka NIK" placeholder="3673xxxxxxxxxxxx" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Nomor KPJ / Kode Billing</label>
+                        <input type="text" id="memberKpj" placeholder="Contoh: 24019283712" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">No. WhatsApp Aktif <span class="text-rose-500">*</span></label>
+                        <input type="tel" id="memberPhone" required placeholder="0812xxxxxxxx" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Segmen Kepesertaan <span class="text-rose-500">*</span></label>
+                        <select id="memberSegmen" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="BPU">BPU (Bukan Penerima Upah / Mandiri)</option>
+                            <option value="PU">PU (Penerima Upah / Badan Usaha)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Wilayah Koordinator Kecamatan <span class="text-rose-500">*</span></label>
+                        <select id="memberKecamatan" onchange="updateFormKelurahanOptions()" required class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Serang">Kecamatan Serang</option>
+                            <option value="Cipocok Jaya">Kecamatan Cipocok Jaya</option>
+                            <option value="Taktakan">Kecamatan Taktakan</option>
+                            <option value="Curug">Kecamatan Curug</option>
+                            <option value="Walantaka">Kecamatan Walantaka</option>
+                            <option value="Kasemen">Kecamatan Kasemen</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Kelurahan / Desa <span class="text-rose-500">*</span></label>
+                        <select id="memberKelurahan" onchange="updateFormSchoolOptions()" required class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold uppercase text-slate-600">Lembaga SPS / PAUD (Kemendikdasmen)</label>
+                            <button type="button" onclick="openSchoolModal(document.getElementById('memberKecamatan').value, document.getElementById('memberKelurahan').value)" class="text-[10px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition">
+                                + Tambah Baru
+                            </button>
+                        </div>
+                        <select id="memberSchool" onchange="onFormSchoolChange()" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Profesi / Jabatan / Nama Badan Usaha <span class="text-rose-500">*</span></label>
+                    <input type="text" id="memberJob" required placeholder="Contoh: Pendidik PAUD / Pengelola SPS / Pedagang" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-2">Program Perlindungan yang Diikuti</label>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer hover:bg-emerald-50">
+                            <input type="checkbox" name="program" value="JKK" checked class="accent-emerald-600 w-4 h-4">
+                            <span class="text-xs font-bold text-slate-700">JKK</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer hover:bg-emerald-50">
+                            <input type="checkbox" name="program" value="JKM" checked class="accent-emerald-600 w-4 h-4">
+                            <span class="text-xs font-bold text-slate-700">JKM</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 rounded-xl cursor-pointer hover:bg-emerald-50">
+                            <input type="checkbox" name="program" value="JHT" class="accent-emerald-600 w-4 h-4">
+                            <span class="text-xs font-bold text-slate-700">JHT</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+                    <p class="text-xs font-bold uppercase text-emerald-700 flex items-center gap-1.5">
+                        <i class="fas fa-tasks"></i> Kontrol Tahapan & Keaktifan Iuran
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tahap Pendaftaran</label>
+                            <select id="memberStage" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="1">1. Input Data & NIK</option>
+                                <option value="2">2. Kode Iuran Terbit</option>
+                                <option value="3">3. Iuran Perdana Lunas</option>
+                                <option value="4">4. Kartu Digital Aktif</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Status Keaktifan</label>
+                            <select id="memberStatus" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <option value="Aktif">Aktif (Iuran Lancar)</option>
+                                <option value="Proses Verifikasi">Proses Verifikasi</option>
+                                <option value="Menunggak">Menunggak Iuran</option>
+                                <option value="Non-Aktif">Non-Aktif</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nominal Iuran / Bln (Rp)</label>
+                            <input type="number" id="memberIuran" value="16800" step="100" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan Koordinator / Keterangan Pembayaran</label>
+                        <input type="text" id="memberNote" placeholder="Contoh: Lunas via autodebet Bank BRI s/d Nov 2026" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">Batal</button>
+                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-emerald-600/20 transition">Simpan Data Peserta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Detail Peserta -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="text-base font-bold flex items-center gap-2">
+                    <i class="fas fa-id-badge text-emerald-400"></i>
+                    <span>Kartu Kontrol Kepesertaan</span>
+                </h3>
+                <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="detailModalBody" class="p-6 space-y-4 text-sm"></div>
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeDetailModal()" class="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-semibold hover:bg-slate-700">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Atur Target Akuisisi -->
+    <div id="targetModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden fade-in">
+            <div class="bg-purple-700 px-5 py-4 flex justify-between items-center text-white">
+                <h3 class="text-base font-bold"><i class="fas fa-bullseye mr-2"></i>Target Akuisisi Aktif</h3>
+                <button onclick="closeTargetModal()" class="text-white/80 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <form onsubmit="saveTargetGoal(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Jumlah Target Peserta Aktif</label>
+                    <input type="number" id="targetGoalInput" min="1" max="10000" required class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeTargetModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold">Simpan Target</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Tambah Lembaga SPS / PAUD (Kemendikdasmen) -->
+    <div id="schoolModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden fade-in">
+            <div class="bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-4 flex justify-between items-center text-white">
+                <h3 class="text-base font-bold flex items-center gap-2">
+                    <i class="fas fa-school"></i>
+                    <span>Tambah Satuan Pendidikan SPS / PAUD</span>
+                </h3>
+                <button onclick="closeSchoolModal()" class="text-white/80 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <form onsubmit="saveNewSchool(event)" class="p-5 space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Kecamatan</label>
+                        <select id="schoolKecamatan" onchange="updateSchoolModalKelurahan()" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="Serang">Serang</option>
+                            <option value="Cipocok Jaya">Cipocok Jaya</option>
+                            <option value="Taktakan">Taktakan</option>
+                            <option value="Curug">Curug</option>
+                            <option value="Walantaka">Walantaka</option>
+                            <option value="Kasemen">Kasemen</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Kelurahan / Desa</label>
+                        <select id="schoolKelurahan" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bentuk</label>
+                        <select id="schoolType" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="SPS">SPS</option>
+                            <option value="KB">KB / PAUD</option>
+                            <option value="TPA">TPA</option>
+                            <option value="TK">TK / RA</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">NPSN (8 Digit Kemendikdasmen)</label>
+                        <input type="text" id="schoolNpsn" required maxlength="8" pattern="[0-9]{8}" placeholder="Contoh: 69830312" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nama Satuan Pendidikan <span class="text-rose-500">*</span></label>
+                    <input type="text" id="schoolNameInput" required placeholder="Contoh: SPS BKB KEMAS MELATI" class="w-full border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeSchoolModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold">Simpan Lembaga</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Kirim HTML Mode Baca & Mode Admin 1 ke Admin 2 -->
+    <div id="shareHtmlModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+            <div class="bg-gradient-to-r from-cyan-700 to-emerald-700 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="text-base font-extrabold flex items-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Kirim HTML: Mode Baca & Mode Admin</span>
+                </h3>
+                <button onclick="closeShareHtmlModal()" class="text-white/80 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs font-semibold text-slate-700">
+                    Pilih jenis paket file HTML mandiri yang berisi seluruh data kepesertaan terbaru saat ini (<span id="shareTotalCount" class="font-extrabold text-emerald-700">0</span> peserta) untuk dikirim dari <strong>Admin 1</strong> ke <strong>Admin 2</strong> atau pihak pemantau:
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Pilihan 1: Mode Baca -->
+                    <label class="cursor-pointer border-2 border-sky-300 bg-sky-50/70 hover:bg-sky-50 rounded-2xl p-4 flex flex-col justify-between transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2 py-0.5 rounded-md bg-sky-700 text-white text-[10px] font-extrabold uppercase">Mode Baca</span>
+                                <input type="radio" name="htmlExportMode" value="readonly" checked class="accent-sky-600 w-4 h-4">
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900">HTML Mode Baca (Read-Only)</h4>
+                            <p class="text-[11px] text-slate-700 mt-1">Hanya untuk monitoring & melihat rekap. Tombol tambah, edit, hapus, & impor dikunci serta NIK disamarkan.</p>
+                        </div>
+                    </label>
+
+                    <!-- Pilihan 2: Mode Admin 1 ke Admin 2 -->
+                    <label class="cursor-pointer border-2 border-emerald-400 bg-emerald-50/70 hover:bg-emerald-50 rounded-2xl p-4 flex flex-col justify-between transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="px-2 py-0.5 rounded-md bg-emerald-700 text-white text-[10px] font-extrabold uppercase">Mode Admin</span>
+                                <input type="radio" name="htmlExportMode" value="admin" class="accent-emerald-600 w-4 h-4">
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900">Admin 1 &rarr; Admin 2 (Full Akses)</h4>
+                            <p class="text-[11px] text-slate-700 mt-1">Transfer penuh seluruh database peserta, lembaga PAUD/SPS, target, & logo agar Admin 2 dapat langsung mengelola.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                    <label class="block text-xs font-extrabold text-slate-800">Nomor WhatsApp Tujuan (Admin 2 / Penerima)</label>
+                    <div class="flex gap-2">
+                        <input type="tel" id="admin2PhoneInput" placeholder="Contoh: 085946982520" class="flex-1 border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <button type="button" onclick="sendHtmlViaWhatsApp()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition shrink-0">
+                            <i class="fab fa-whatsapp text-sm"></i>
+                            <span>Kirim File & WA</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-600">*Di HP/Android/iOS, file HTML otomatis dilampirkan langsung ke WhatsApp. Di laptop/PC, file otomatis terunduh & siap diseret ke chat WA yang terbuka.</p>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="closeShareHtmlModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50">Tutup</button>
+                    <button type="button" onclick="generateAndDownloadModeHtml()" class="px-5 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-md transition">
+                        <i class="fas fa-download"></i>
+                        <span>Unduh File HTML Sekarang</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'bpjstk_members_serang_v6';
+        const THEME_KEY = 'bpjstk_page_theme_v1';
+        const DEV_LOGO_KEY = 'bpjstk_dev_logo_v1';
+        const TARGET_KEY = 'bpjstk_target_goal_v1';
+
+        let soundEnabled = true;
+        let chimeSynth = null;
+        let chimeReverb = null;
+
+        // Efek suara chime halus + ucapan navigasi Bahasa Indonesia
+        window.speakNavUtterance = function (text) {
+            if (!soundEnabled || !text || !('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'id-ID';
+                utter.rate = 1.04;
+                utter.pitch = 1.02;
+                utter.volume = 0.95;
+                window.speechSynthesis.speak(utter);
+            } catch (e) {}
+        };
+
+        window.playNavSound = async function (type = 'click', speechText = '') {
+            if (speechText) window.speakNavUtterance(speechText);
+            if (!soundEnabled) return;
+            try {
+                if (typeof Tone !== 'undefined') {
+                    if (Tone.context && Tone.context.state !== 'running') {
+                        await Tone.start();
+                    }
+                    if (!chimeSynth) {
+                        chimeReverb = new Tone.Reverb({ decay: 1.4, wet: 0.25 }).toDestination();
+                        chimeSynth = new Tone.PolySynth(Tone.Synth, {
+                            oscillator: { type: 'sine' },
+                            envelope: { attack: 0.015, decay: 0.28, sustain: 0.05, release: 0.6 }
+                        }).connect(chimeReverb);
+                        chimeSynth.volume.value = -8;
+                    }
+                    const now = Tone.now() + 0.02;
+                    if (type === 'success') {
+                        chimeSynth.triggerAttackRelease(['C5', 'E5'], '16n', now);
+                        chimeSynth.triggerAttackRelease(['G5', 'C6'], '8n', now + 0.11);
+                    } else if (type === 'error') {
+                        chimeSynth.triggerAttackRelease(['E4', 'Bb4'], '16n', now);
+                        chimeSynth.triggerAttackRelease(['D4', 'Ab4'], '8n', now + 0.13);
+                    } else {
+                        chimeSynth.triggerAttackRelease('D5', '32n', now);
+                        chimeSynth.triggerAttackRelease('A5', '16n', now + 0.06);
+                    }
+                    return;
+                }
+            } catch (e) {}
+
+            // Fallback Web Audio API chime
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                if (!window._fallbackAudioCtx) window._fallbackAudioCtx = new AudioCtx();
+                const ctx = window._fallbackAudioCtx;
+                if (ctx.state === 'suspended') await ctx.resume();
+                const notes = type === 'success' ? [523.25, 659.25, 783.99] : [587.33, 880];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.07);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime + idx * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.07 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + idx * 0.07);
+                    osc.stop(ctx.currentTime + idx * 0.07 + 0.26);
+                });
+            } catch (err) {}
+        };
+
+        window.toggleSound = function () {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            const btn = document.getElementById('soundToggleBtn');
+            if (icon) {
+                icon.className = soundEnabled ? 'fas fa-volume-up text-emerald-600' : 'fas fa-volume-mute text-slate-400';
+            }
+            if (btn) {
+                btn.title = soundEnabled ? 'Suara & Ucapan Navigasi Aktif' : 'Suara Navigasi Nonaktif';
+            }
+            if (soundEnabled) {
+                window.playNavSound('success', 'Suara navigasi diaktifkan');
+            }
+        };
+
+        window.openShareHtmlModal = function () {
+            const modal = document.getElementById('shareHtmlModal');
+            const countEl = document.getElementById('shareTotalCount');
+            if (countEl && typeof members !== 'undefined') countEl.textContent = members.length;
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        };
+
+        window.closeShareHtmlModal = function () {
+            const modal = document.getElementById('shareHtmlModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.generateAndDownloadModeHtml = function (skipDownload = false) {
+            const modeRadio = document.querySelector('input[name="htmlExportMode"]:checked');
+            const mode = modeRadio ? modeRadio.value : 'readonly';
+            const isReadOnly = mode === 'readonly';
+
+            const currentMembers = typeof members !== 'undefined' && Array.isArray(members)
+                ? members
+                : JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const previewSrc = document.getElementById('devLogoPreview')?.getAttribute('src') || '';
+            const currentLogo = localStorage.getItem(DEV_LOGO_KEY)
+                || (typeof window.name === 'string' && window.name.startsWith('BPJSTK_LOGO::') ? window.name.replace('BPJSTK_LOGO::', '') : '')
+                || (previewSrc.startsWith('data:image/') ? previewSrc : '');
+            const currentTarget = localStorage.getItem(TARGET_KEY) || '500';
+            const currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
+
+            let htmlSource = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+            // Jika logo pengembang sudah diunggah, sembunyikan bar header & tanam gambar langsung di HTML ekspor
+            if (currentLogo) {
+                htmlSource = htmlSource.replace(
+                    /id="devLogoHeaderBar" class="[^"]*"/,
+                    'id="devLogoHeaderBar" class="hidden flex items-center justify-between mb-2"'
+                );
+                htmlSource = htmlSource.replace(
+                    /<svg id="devLogoDefaultSvg"/,
+                    '<svg id="devLogoDefaultSvg" style="display: none;"'
+                );
+                htmlSource = htmlSource.replace(
+                    /<img id="devLogoPreview"[^>]*>/,
+                    `<img id="devLogoPreview" src="${currentLogo}" alt="Logo Pengembang" style="display: block;" class="dev-logo-animated w-full h-full object-contain p-1 bg-white">`
+                );
+            }
+
+            // Tanamkan data terkini, mode akses, dan logo pengembang ke dalam skrip HTML mandiri
+            const embeddedPayload = `
+<script>
+(function(){
+    window.__BPJSTK_ACCESS_MODE__ = ${JSON.stringify(mode)};
+    window.__BPJSTK_LOGO_EMBEDDED__ = ${JSON.stringify(Boolean(currentLogo))};
+    const EMBEDDED_LOGO_DATA = ${JSON.stringify(currentLogo)};
+    try {
+        localStorage.setItem(${JSON.stringify(STORAGE_KEY)}, ${JSON.stringify(JSON.stringify(currentMembers))});
+        localStorage.setItem(${JSON.stringify(TARGET_KEY)}, ${JSON.stringify(String(currentTarget))});
+        localStorage.setItem(${JSON.stringify(THEME_KEY)}, ${JSON.stringify(currentTheme)});
+        if (EMBEDDED_LOGO_DATA) {
+            localStorage.setItem(${JSON.stringify(DEV_LOGO_KEY)}, EMBEDDED_LOGO_DATA);
+            localStorage.setItem('bpjstk_logo_embedded_flag', '1');
+            window.name = 'BPJSTK_LOGO::' + EMBEDDED_LOGO_DATA;
+        }
+    } catch(e) {}
+    window.addEventListener('DOMContentLoaded', function(){
+        if (EMBEDDED_LOGO_DATA && typeof applyDeveloperLogoUI === 'function') {
+            applyDeveloperLogoUI(EMBEDDED_LOGO_DATA);
+        }
+        const badge = document.getElementById('accessModeBadge');
+        if (badge) {
+            if (${JSON.stringify(isReadOnly)}) {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold bg-sky-100 text-sky-900 border border-sky-300';
+                badge.innerHTML = '<i class="fas fa-eye text-sky-700"></i><span>Mode Baca (Read-Only)</span>';
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300';
+                badge.innerHTML = '<i class="fas fa-user-shield text-emerald-700"></i><span>Mode Admin 2</span>';
+            }
+        }
+    });
+})();
+<\/script>`;
+
+            htmlSource = htmlSource.replace('<head>', '<head>' + embeddedPayload);
+
+            const filename = isReadOnly
+                ? `BPJSTK_Mode_Baca_${new Date().toISOString().slice(0, 10)}.html`
+                : `BPJSTK_Admin2_FullData_${new Date().toISOString().slice(0, 10)}.html`;
+
+            const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' });
+            if (!skipDownload) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`File ${filename} berhasil diunduh!`, 'success');
+                window.playNavSound('success', 'File HTML berhasil diunduh');
+            }
+            return { blob, filename, isReadOnly };
+        };
+
+        window.sendHtmlViaWhatsApp = async function () {
+            const phoneRaw = (document.getElementById('admin2PhoneInput')?.value || '').replace(/\D/g, '');
+            const phone = phoneRaw.startsWith('0') ? '62' + phoneRaw.slice(1) : phoneRaw;
+            const res = window.generateAndDownloadModeHtml(true);
+            const modeLabel = res.isReadOnly ? 'Mode Baca (Read-Only)' : 'Mode Admin 2 (Full Akses & Data Terkini)';
+            const msg = `Assalamu'alaikum, berikut kami kirimkan file *BPJSTK Monitor Pro (${modeLabel})* berisi ${members.length} data kepesertaan terbaru. Silakan buka file HTML terlampir.`;
+
+            try {
+                const file = new File([res.blob], res.filename, { type: 'text/html' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: `BPJSTK Monitor Pro - ${modeLabel}`,
+                        text: msg,
+                        files: [file]
+                    });
+                    showToast('Berhasil membagikan file HTML langsung ke aplikasi tujuan!', 'success');
+                    return;
+                }
+            } catch (e) {}
+
+            // Fallback desktop: unduh file lalu buka WhatsApp Web/App
+            const url = URL.createObjectURL(res.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = res.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            const waUrl = phone
+                ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+                : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, '_blank');
+            showToast(`File "${res.filename}" diunduh! Silakan lampirkan file tersebut di jendela WhatsApp yang terbuka.`, 'info');
+            window.playNavSound('success', 'File diunduh dan WhatsApp dibuka');
+        };
+
+        // --- DATA WILAYAH 6 KECAMATAN & 67 KELURAHAN KOTA SERANG ---
+        const KECAMATAN_KELURAHAN = {
+            "Serang": [
+                "Cimuncang", "Cipare", "Kagungan", "Kaligandu", "Kotabaru",
+                "Lontarbaru", "Lopang", "Serang", "Sukawana", "Sumurpecung",
+                "Terondol", "Unyur"
+            ],
+            "Cipocok Jaya": [
+                "Banjaragung", "Banjarsari", "Cipocok Jaya", "Dalung",
+                "Gelam", "Karundang", "Panancangan", "Tembong"
+            ],
+            "Taktakan": [
+                "Cibendung", "Cilowong", "Drangong", "Kalang Anyar", "Kuranji",
+                "Lialang", "Pancur", "Panggungjati", "Sayar", "Sepang",
+                "Taktakan", "Tamanbaru", "Umbul Tengah"
+            ],
+            "Curug": [
+                "Cipete", "Curug", "Curugmanis", "Kamanisan", "Pancalaksana",
+                "Sukajaya", "Sukalaksana", "Sukawana Curug", "Tinggar"
+            ],
+            "Walantaka": [
+                "Cigoong", "Kalodran", "Kepuren", "Kiara", "Lebakwangi",
+                "Nyapah", "Pabuaran", "Pageragung", "Pasuluhan", "Pengampelan",
+                "Pipitan", "Tegalsari", "Teritih", "Walantaka"
+            ],
+            "Kasemen": [
+                "Banten", "Bendung", "Kasemen", "Kasunyatan", "Kilasah",
+                "Margaluyu", "Mesjid Priyayi", "Sawah Luhur", "Terumbu", "Warung Jaud"
+            ]
+        };
+
+        const DEFAULT_SCHOOLS = [
+            { id: 'sch-1', kecamatan: 'Serang', kelurahan: 'Cipare', type: 'SPS', npsn: '69830101', name: 'SPS BKB KEMAS MELATI CIPARE' },
+            { id: 'sch-2', kecamatan: 'Serang', kelurahan: 'Sumurpecung', type: 'KB', npsn: '69830102', name: 'KB PAUD AL-IKHLAS SUMURPECUNG' },
+            { id: 'sch-3', kecamatan: 'Cipocok Jaya', kelurahan: 'Panancangan', type: 'SPS', npsn: '69830201', name: 'SPS BKB KEMAS ANGGREK PANANCANGAN' },
+            { id: 'sch-4', kecamatan: 'Taktakan', kelurahan: 'Drangong', type: 'KB', npsn: '69830301', name: 'KB PAUD TUNAS HARAPAN DRANGONG' },
+            { id: 'sch-5', kecamatan: 'Curug', kelurahan: 'Curug', type: 'SPS', npsn: '69830401', name: 'SPS BKB KEMAS MAWAR CURUG' },
+            { id: 'sch-6', kecamatan: 'Walantaka', kelurahan: 'Pipitan', type: 'KB', npsn: '69830501', name: 'KB PAUD CAHAYA BUNDA PIPITAN' },
+            { id: 'sch-7', kecamatan: 'Kasemen', kelurahan: 'Banten', type: 'SPS', npsn: '69830601', name: 'SPS BKB KEMAS DARUSSALAM BANTEN' }
+        ];
+
+        const DEFAULT_MEMBERS = [
+            {
+                id: 'm-101',
+                name: 'Siti Aminah, S.Pd',
+                nik: '3673014506850002',
+                kpj: '24019283711',
+                phone: '081288991001',
+                segmen: 'BPU',
+                kecamatan: 'Serang',
+                kelurahan: 'Cipare',
+                schoolId: 'sch-1',
+                schoolName: 'SPS BKB KEMAS MELATI CIPARE',
+                job: 'Pendidik PAUD / SPS',
+                programs: ['JKK', 'JKM'],
+                stage: 4,
+                status: 'Aktif',
+                iuran: 16800,
+                note: 'Iuran lancar via autodebet Bank BJB'
+            },
+            {
+                id: 'm-102',
+                name: 'Ahmad Fauzi',
+                nik: '3673021208900004',
+                kpj: '24019283712',
+                phone: '081388991002',
+                segmen: 'BPU',
+                kecamatan: 'Cipocok Jaya',
+                kelurahan: 'Panancangan',
+                schoolId: 'sch-3',
+                schoolName: 'SPS BKB KEMAS ANGGREK PANANCANGAN',
+                job: 'Pengelola Satuan PAUD',
+                programs: ['JKK', 'JKM', 'JHT'],
+                stage: 4,
+                status: 'Aktif',
+                iuran: 36800,
+                note: 'Kartu digital aktif & terverifikasi'
+            },
+            {
+                id: 'm-103',
+                name: 'Nurhayati',
+                nik: '3673035403880001',
+                kpj: '24019283713',
+                phone: '085788991003',
+                segmen: 'BPU',
+                kecamatan: 'Taktakan',
+                kelurahan: 'Drangong',
+                schoolId: 'sch-4',
+                schoolName: 'KB PAUD TUNAS HARAPAN DRANGONG',
+                job: 'Guru Pendamping PAUD',
+                programs: ['JKK', 'JKM'],
+                stage: 2,
+                status: 'Proses Verifikasi',
+                iuran: 16800,
+                note: 'Menunggu konfirmasi pembayaran kode billing'
+            },
+            {
+                id: 'm-104',
+                name: 'Dedi Supriyadi',
+                nik: '3673041911820003',
+                kpj: '24019283714',
+                phone: '087888991004',
+                segmen: 'PU',
+                kecamatan: 'Curug',
+                kelurahan: 'Curug',
+                schoolId: 'sch-5',
+                schoolName: 'SPS BKB KEMAS MAWAR CURUG',
+                job: 'Tenaga Administrasi Lembaga',
+                programs: ['JKK', 'JKM', 'JHT'],
+                stage: 3,
+                status: 'Menunggak',
+                iuran: 42000,
+                note: 'Tunggakan 1 bulan berjalan, perlu pengingat WA'
+            },
+            {
+                id: 'm-105',
+                name: 'Rina Marlina',
+                nik: '3673056207910005',
+                kpj: '24019283715',
+                phone: '081988991005',
+                segmen: 'BPU',
+                kecamatan: 'Walantaka',
+                kelurahan: 'Pipitan',
+                schoolId: 'sch-6',
+                schoolName: 'KB PAUD CAHAYA BUNDA PIPITAN',
+                job: 'Kepala Satuan PAUD',
+                programs: ['JKK', 'JKM'],
+                stage: 4,
+                status: 'Aktif',
+                iuran: 16800,
+                note: 'Lunas s/d akhir tahun berjalan'
+            },
+            {
+                id: 'm-106',
+                name: 'Hendra Gunawan',
+                nik: '3673060804870006',
+                kpj: '24019283716',
+                phone: '085288991006',
+                segmen: 'BPU',
+                kecamatan: 'Kasemen',
+                kelurahan: 'Banten',
+                schoolId: 'sch-7',
+                schoolName: 'SPS BKB KEMAS DARUSSALAM BANTEN',
+                job: 'Tutor Pendidikan Nonformal',
+                programs: ['JKK', 'JKM'],
+                stage: 1,
+                status: 'Non-Aktif',
+                iuran: 16800,
+                note: 'Perlu aktivasi ulang kepesertaan bulan ini'
+            }
+        ];
+
+        const SCHOOLS_KEY = 'bpjstk_schools_serang_v1';
+        let members = [];
+        let schools = [];
+        let activeTab = 'dashboard';
+        let selectedKorcabKelurahan = 'Semua';
+
+        function isReadOnlyMode() {
+            return window.__BPJSTK_ACCESS_MODE__ === 'readonly';
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const styles = {
+                success: 'bg-emerald-900 text-white border-emerald-500',
+                error: 'bg-rose-900 text-white border-rose-500',
+                warning: 'bg-amber-900 text-white border-amber-500',
+                info: 'bg-slate-900 text-white border-teal-400'
+            };
+            const icons = {
+                success: 'fa-check-circle text-emerald-400',
+                error: 'fa-exclamation-circle text-rose-400',
+                warning: 'fa-exclamation-triangle text-amber-400',
+                info: 'fa-info-circle text-teal-300'
+            };
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border-l-4 shadow-xl text-xs sm:text-sm font-bold fade-in ${styles[type] || styles.info}`;
+            toast.innerHTML = `<i class="fas ${icons[type] || icons.info} text-base"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3800);
+        }
+
+        // --- PENGELOLAAN LOGO PENGEMBANG PERMANEN ---
+        function openLogoDB() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) return reject('No IndexedDB');
+                const req = indexedDB.open('BPJSTK_DevLogoDB', 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('logos')) {
+                        db.createObjectStore('logos');
+                    }
+                };
+                req.onsuccess = (e) => resolve(e.target.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        async function saveLogoToDB(dataUrl) {
+            try {
+                const db = await openLogoDB();
+                const tx = db.transaction('logos', 'readwrite');
+                tx.objectStore('logos').put(dataUrl, 'permanent_logo');
+            } catch (e) {}
+        }
+
+        async function loadLogoFromDB() {
+            try {
+                const db = await openLogoDB();
+                return await new Promise((resolve) => {
+                    const tx = db.transaction('logos', 'readonly');
+                    const req = tx.objectStore('logos').get('permanent_logo');
+                    req.onsuccess = () => resolve(req.result || '');
+                    req.onerror = () => resolve('');
+                });
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function applyDeveloperLogoUI(dataUrl) {
+            if (!dataUrl) return;
+            const img = document.getElementById('devLogoPreview');
+            const defaultSvg = document.getElementById('devLogoDefaultSvg');
+            const subtext = document.getElementById('devLogoSubtext');
+            const card = document.getElementById('devLogoCard');
+            const embedBtn = document.getElementById('downloadEmbeddedHtmlBtn');
+            const headerBar = document.getElementById('devLogoHeaderBar');
+
+            if (img) {
+                img.src = dataUrl;
+                img.style.display = 'block';
+            }
+            if (defaultSvg) {
+                defaultSvg.style.display = 'none';
+            }
+            if (subtext) {
+                subtext.textContent = 'Pengembang Aplikasi • Logo Permanen';
+            }
+            if (card) {
+                card.classList.remove('border-dashed', 'cursor-pointer');
+                card.classList.add('border-solid');
+            }
+            const isOnlineOrEmbedded =
+                window.location.protocol === 'http:' ||
+                window.location.protocol === 'https:' ||
+                window.__BPJSTK_LOGO_EMBEDDED__ === true ||
+                localStorage.getItem('bpjstk_logo_embedded_flag') === '1';
+
+            if (isOnlineOrEmbedded) {
+                if (headerBar) headerBar.classList.add('hidden');
+            } else if (embedBtn) {
+                embedBtn.classList.remove('hidden');
+            }
+        }
+
+        window.triggerDeveloperLogoUpload = function () {
+            const existingLogo = localStorage.getItem(DEV_LOGO_KEY) ||
+                (typeof window.name === 'string' && window.name.startsWith('BPJSTK_LOGO::') ? window.name.replace('BPJSTK_LOGO::', '') : '');
+            if (existingLogo || window.__BPJSTK_LOGO_EMBEDDED__) {
+                showToast('Logo pengembang sudah terkunci permanen.', 'info');
+                return;
+            }
+            const input = document.getElementById('devLogoInput');
+            if (input) input.click();
+        };
+
+        window.handleDeveloperLogoUpload = function (event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const dataUrl = e.target.result;
+                try { localStorage.setItem(DEV_LOGO_KEY, dataUrl); } catch (err) {}
+                try { window.name = 'BPJSTK_LOGO::' + dataUrl; } catch (err) {}
+                await saveLogoToDB(dataUrl);
+                applyDeveloperLogoUI(dataUrl);
+                showToast('Logo pengembang berhasil ditanam permanen!', 'success');
+                window.playNavSound('success', 'Logo pengembang berhasil ditanam permanen');
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.downloadEmbeddedHtml = function () {
+            const previewSrc = document.getElementById('devLogoPreview')?.getAttribute('src') || '';
+            const logoData = localStorage.getItem(DEV_LOGO_KEY)
+                || (typeof window.name === 'string' && window.name.startsWith('BPJSTK_LOGO::') ? window.name.replace('BPJSTK_LOGO::', '') : '')
+                || (previewSrc.startsWith('data:image/') ? previewSrc : '');
+
+            if (!logoData) {
+                showToast('Unggah logo pengembang terlebih dahulu.', 'warning');
+                return;
+            }
+
+            try { localStorage.setItem('bpjstk_logo_embedded_flag', '1'); } catch (e) {}
+            window.__BPJSTK_LOGO_EMBEDDED__ = true;
+            const headerBar = document.getElementById('devLogoHeaderBar');
+            if (headerBar) headerBar.classList.add('hidden');
+
+            let htmlSource = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            htmlSource = htmlSource.replace(
+                /id="devLogoHeaderBar" class="[^"]*"/,
+                'id="devLogoHeaderBar" class="hidden flex items-center justify-between mb-2"'
+            );
+            htmlSource = htmlSource.replace(
+                /<svg id="devLogoDefaultSvg"/,
+                '<svg id="devLogoDefaultSvg" style="display: none;"'
+            );
+            htmlSource = htmlSource.replace(
+                /<img id="devLogoPreview"[^>]*>/,
+                `<img id="devLogoPreview" src="${logoData}" alt="Logo Pengembang" style="display: block;" class="dev-logo-animated w-full h-full object-contain p-1 bg-white">`
+            );
+
+            const injectScript = `<script>window.__BPJSTK_LOGO_EMBEDDED__=true;try{localStorage.setItem(${JSON.stringify(DEV_LOGO_KEY)},${JSON.stringify(logoData)});localStorage.setItem('bpjstk_logo_embedded_flag','1');window.name='BPJSTK_LOGO::'+${JSON.stringify(logoData)};}catch(e){}<\/script>`;
+            htmlSource = htmlSource.replace('<head>', '<head>' + injectScript);
+
+            const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `BPJSTK_Monitor_Pro_LogoPermanen.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('File HTML dengan logo permanen berhasil diunduh!', 'success');
+            window.playNavSound('success', 'Logo berhasil ditanam ke file HTML');
+        };
+
+        async function initDeveloperLogo() {
+            const previewSrc = document.getElementById('devLogoPreview')?.getAttribute('src') || '';
+            let logoData = localStorage.getItem(DEV_LOGO_KEY) || '';
+            if (!logoData && typeof window.name === 'string' && window.name.startsWith('BPJSTK_LOGO::')) {
+                logoData = window.name.replace('BPJSTK_LOGO::', '');
+            }
+            if (!logoData && previewSrc.startsWith('data:image/')) {
+                logoData = previewSrc;
+            }
+            if (!logoData) {
+                logoData = await loadLogoFromDB();
+            }
+            if (logoData) {
+                try { localStorage.setItem(DEV_LOGO_KEY, logoData); } catch (e) {}
+                applyDeveloperLogoUI(logoData);
+            }
+        }
+
+        // --- TEMA WARNA HALAMAN (DEFAULT: DARK / HITAM) ---
+        window.setPageTheme = function (theme) {
+            const validThemes = ['dark', 'emerald', 'blue', 'indigo', 'amber'];
+            const chosen = validThemes.includes(theme) ? theme : 'dark';
+            document.body.classList.remove('theme-dark', 'theme-emerald', 'theme-blue', 'theme-indigo', 'theme-amber');
+            document.body.classList.add('theme-' + chosen);
+            try { localStorage.setItem(THEME_KEY, chosen); } catch (e) {}
+
+            document.querySelectorAll('.theme-dot').forEach((btn) => {
+                const isSelected = btn.getAttribute('data-theme-btn') === chosen;
+                btn.classList.toggle('ring-2', isSelected);
+                btn.classList.toggle('ring-offset-1', isSelected);
+                btn.classList.toggle('ring-emerald-400', isSelected);
+            });
+            if (members.length) renderCharts();
+        };
+
+        // --- TANGGAL MASEHI, HIJRIYAH, UCAPAN & JADWAL SHOLAT ---
+        function updateDatesAndGreeting() {
+            const now = new Date();
+            const masehiEl = document.getElementById('masehiDateText');
+            const hijriEl = document.getElementById('hijriDateText');
+            const greetingEl = document.getElementById('welcomeGreetingTitle');
+
+            if (masehiEl) {
+                masehiEl.textContent = now.toLocaleDateString('id-ID', {
+                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                });
+            }
+            if (hijriEl) {
+                try {
+                    hijriEl.textContent = new Intl.DateTimeFormat('id-ID-u-ca-islamic', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    }).format(now);
+                } catch (e) {
+                    hijriEl.textContent = '1448 H';
+                }
+            }
+            if (greetingEl) {
+                const hour = now.getHours();
+                let waktu = 'Pagi';
+                if (hour >= 11 && hour < 15) waktu = 'Siang';
+                else if (hour >= 15 && hour < 18) waktu = 'Sore';
+                else if (hour >= 18 || hour < 4) waktu = 'Malam';
+                greetingEl.textContent = `Assalamu'alaikum & Selamat ${waktu}, Koordinator Wilayah!`;
+            }
+        }
+
+        function startLiveClock() {
+            const clockEl = document.getElementById('liveClock');
+            const tick = () => {
+                if (clockEl) {
+                    const now = new Date();
+                    clockEl.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+                }
+            };
+            tick();
+            setInterval(tick, 1000);
+        }
+
+        window.fetchPrayerTimes = async function () {
+            const city = document.getElementById('cityPrayerSelect')?.value || 'Serang';
+            try {
+                const res = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=Indonesia&method=20`);
+                const json = await res.json();
+                if (json && json.data && json.data.timings) {
+                    const t = json.data.timings;
+                    ['Imsak', 'Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].forEach((k) => {
+                        const el = document.getElementById('time-' + k);
+                        if (el && t[k]) el.textContent = t[k].slice(0, 5);
+                    });
+                }
+            } catch (e) {}
+        };
+
+        // --- INISIALISASI DATA & FILTER WILAYAH ---
+        function loadAllData() {
+            try {
+                const savedMembers = localStorage.getItem(STORAGE_KEY);
+                members = savedMembers ? JSON.parse(savedMembers) : [...DEFAULT_MEMBERS];
+                if (!Array.isArray(members) || members.length === 0) members = [...DEFAULT_MEMBERS];
+            } catch (e) {
+                members = [...DEFAULT_MEMBERS];
+            }
+
+            try {
+                const savedSchools = localStorage.getItem(SCHOOLS_KEY);
+                schools = savedSchools ? JSON.parse(savedSchools) : [...DEFAULT_SCHOOLS];
+                if (!Array.isArray(schools)) schools = [...DEFAULT_SCHOOLS];
+            } catch (e) {
+                schools = [...DEFAULT_SCHOOLS];
+            }
+        }
+
+        function saveAllData() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(members)); } catch (e) {}
+            try { localStorage.setItem(SCHOOLS_KEY, JSON.stringify(schools)); } catch (e) {}
+        }
+
+        function populateFilterDropdowns() {
+            const kecSelect = document.getElementById('kecamatanFilter');
+            if (kecSelect) {
+                kecSelect.innerHTML = '<option value="Semua">Semua Kecamatan (6)</option>' +
+                    Object.keys(KECAMATAN_KELURAHAN).map(k => `<option value="${k}">Kec. ${k}</option>`).join('');
+            }
+            updateKelurahanFilterOptions();
+            updateSchoolFilterOptions();
+        }
+
+        function updateKelurahanFilterOptions() {
+            const kec = document.getElementById('kecamatanFilter')?.value || 'Semua';
+            const kelSelect = document.getElementById('kelurahanFilter');
+            if (!kelSelect) return;
+            let list = [];
+            if (kec === 'Semua') {
+                Object.values(KECAMATAN_KELURAHAN).forEach(arr => list.push(...arr));
+            } else {
+                list = KECAMATAN_KELURAHAN[kec] || [];
+            }
+            kelSelect.innerHTML = `<option value="Semua">Semua Kelurahan/Desa (${list.length})</option>` +
+                list.map(kel => `<option value="${kel}">${kel}</option>`).join('');
+        }
+
+        function updateSchoolFilterOptions() {
+            const kec = document.getElementById('kecamatanFilter')?.value || 'Semua';
+            const kel = document.getElementById('kelurahanFilter')?.value || 'Semua';
+            const schSelect = document.getElementById('schoolFilter');
+            if (!schSelect) return;
+            const filtered = schools.filter(s =>
+                (kec === 'Semua' || s.kecamatan === kec) &&
+                (kel === 'Semua' || s.kelurahan === kel)
+            );
+            schSelect.innerHTML = `<option value="Semua">Semua Satuan SPS / PAUD (${filtered.length})</option>` +
+                filtered.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        window.onKecamatanFilterChange = function () {
+            selectedKorcabKelurahan = 'Semua';
+            updateKelurahanFilterOptions();
+            updateSchoolFilterOptions();
+            renderKorcabCards();
+            renderTable();
+        };
+
+        window.onKelurahanFilterChange = function () {
+            selectedKorcabKelurahan = document.getElementById('kelurahanFilter')?.value || 'Semua';
+            updateSchoolFilterOptions();
+            renderKorcabCards();
+            renderTable();
+        };
+
+        window.filterByKorcab = function (kecamatan, scrollToTable = false) {
+            const kecEl = document.getElementById('kecamatanFilter');
+            if (kecEl) kecEl.value = kecamatan;
+            selectedKorcabKelurahan = 'Semua';
+            updateKelurahanFilterOptions();
+            updateSchoolFilterOptions();
+            renderKorcabCards();
+            renderTable();
+            window.playNavSound('click', kecamatan === 'Semua' ? 'Menampilkan semua kecamatan' : `Memfilter wilayah Kecamatan ${kecamatan}`);
+            if (scrollToTable) {
+                document.getElementById('memberTableSection')?.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        window.filterByKelurahan = function (kecamatan, kelurahan, event) {
+            if (event) event.stopPropagation();
+            const kecEl = document.getElementById('kecamatanFilter');
+            if (kecEl) kecEl.value = kecamatan;
+            updateKelurahanFilterOptions();
+            const kelEl = document.getElementById('kelurahanFilter');
+            if (kelEl) kelEl.value = kelurahan;
+            selectedKorcabKelurahan = kelurahan;
+            updateSchoolFilterOptions();
+            renderKorcabCards();
+            renderTable();
+            window.playNavSound('click', `Memfilter Kelurahan ${kelurahan}`);
+            document.getElementById('memberTableSection')?.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        window.resetFilters = function () {
+            const s = document.getElementById('searchInput');
+            const seg = document.getElementById('segmenFilter');
+            const kec = document.getElementById('kecamatanFilter');
+            const st = document.getElementById('statusFilter');
+            if (s) s.value = '';
+            if (seg) seg.value = 'Semua';
+            if (kec) kec.value = 'Semua';
+            if (st) st.value = 'Semua';
+            selectedKorcabKelurahan = 'Semua';
+            updateKelurahanFilterOptions();
+            updateSchoolFilterOptions();
+            renderKorcabCards();
+            renderTable();
+            window.playNavSound('click', 'Semua filter direset');
+        };
+
+        // --- NAVIGASI TAB SIDEBAR ---
+        window.switchTab = function (tab) {
+            activeTab = tab;
+            const stFilter = document.getElementById('statusFilter');
+            if (stFilter) {
+                if (tab === 'verifikasi') stFilter.value = 'Proses Verifikasi';
+                else if (tab === 'tunggakan') stFilter.value = 'Menunggak';
+                else stFilter.value = 'Semua';
+            }
+
+            document.querySelectorAll('.nav-btn').forEach((btn) => {
+                const isActive = btn.id === 'nav-' + tab;
+                btn.className = isActive
+                    ? 'nav-btn w-full flex items-center justify-between bg-emerald-600/30 text-white border border-emerald-400/50 px-4 py-3 rounded-xl font-semibold transition'
+                    : 'nav-btn w-full flex items-center justify-between text-emerald-100 hover:bg-emerald-900 hover:text-white px-4 py-3 rounded-xl font-semibold transition';
+            });
+
+            const speeches = {
+                dashboard: 'Menampilkan Dashboard Akuisisi Utama',
+                verifikasi: 'Membuka Antrean Verifikasi Peserta',
+                tunggakan: 'Membuka Pantauan Tunggakan Iuran',
+                korcab: 'Menampilkan Rekap enam Koordinator Kecamatan'
+            };
+            window.playNavSound('click', speeches[tab] || '');
+
+            if (window.innerWidth < 1024) {
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('sidebarBackdrop');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    if (backdrop) backdrop.classList.add('hidden');
+                }
+            }
+
+            renderTable();
+            if (tab === 'korcab') {
+                document.getElementById('korcabSection')?.scrollIntoView({ behavior: 'smooth' });
+            } else if (tab === 'verifikasi' || tab === 'tunggakan') {
+                document.getElementById('memberTableSection')?.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        // --- STATISTIK & KARTU 6 KOORDINATOR KECAMATAN ---
+        function updateStats() {
+            const total = members.length;
+            const aktif = members.filter(m => m.status === 'Aktif').length;
+            const proses = members.filter(m => m.status === 'Proses Verifikasi').length;
+            const tunggak = members.filter(m => m.status === 'Menunggak' || m.status === 'Non-Aktif').length;
+            const target = parseInt(localStorage.getItem(TARGET_KEY) || '500', 10) || 500;
+            const rasio = total > 0 ? Math.round((aktif / total) * 100) : 0;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-aktif').textContent = aktif;
+            document.getElementById('stat-proses').textContent = proses;
+            document.getElementById('stat-tunggak').textContent = tunggak;
+            document.getElementById('stat-rasio-aktif').textContent = `${rasio}% (Target ${target})`;
+
+            const bv = document.getElementById('badge-verifikasi');
+            const bt = document.getElementById('badge-tunggakan');
+            if (bv) bv.textContent = proses;
+            if (bt) bt.textContent = tunggak;
+        }
+
+        function renderKorcabCards() {
+            const grid = document.getElementById('korcabGrid');
+            if (!grid) return;
+            const activeKec = document.getElementById('kecamatanFilter')?.value || 'Semua';
+
+            grid.innerHTML = Object.entries(KECAMATAN_KELURAHAN).map(([kec, kelList]) => {
+                const kecMembers = members.filter(m => m.kecamatan === kec);
+                const aktifCount = kecMembers.filter(m => m.status === 'Aktif').length;
+                const isSelected = activeKec === kec;
+
+                const kelBadges = kelList.map(kel => {
+                    const cnt = kecMembers.filter(m => m.kelurahan === kel).length;
+                    const isKelSelected = isSelected && selectedKorcabKelurahan === kel;
+                    return `<button type="button" onclick="filterByKelurahan('${kec}', '${kel}', event)" class="text-[11px] px-2 py-1 rounded-lg border transition flex items-center gap-1 ${isKelSelected ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm' : 'bg-white/80 hover:bg-white text-slate-800 border-slate-300'}">
+                        <span>${kel}</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] ${cnt > 0 ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'}">${cnt}</span>
+                    </button>`;
+                }).join('');
+
+                return `
+                <div onclick="filterByKorcab('${kec}', true)" class="cursor-pointer rounded-2xl p-4 border-2 transition ${isSelected ? 'bg-white border-emerald-500 ring-2 ring-emerald-400/40 shadow-md' : 'bg-white/85 hover:bg-white border-indigo-200 shadow-sm'}">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h4 class="text-sm font-extrabold text-slate-900">Kec. ${kec}</h4>
+                            <p class="text-[11px] text-slate-600">${kelList.length} Kelurahan/Desa</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-lg font-extrabold text-emerald-700">${aktifCount}</span>
+                            <span class="text-xs text-slate-500"> / ${kecMembers.length} Aktif</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 mt-3 pt-2.5 border-t border-slate-200/80">
+                        ${kelBadges}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- TABEL PESERTA & KONTROL AKSI ---
+        function renderTable() {
+            const tbody = document.getElementById('memberTableBody');
+            if (!tbody) return;
+
+            const query = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const segmen = document.getElementById('segmenFilter')?.value || 'Semua';
+            const kec = document.getElementById('kecamatanFilter')?.value || 'Semua';
+            const kel = document.getElementById('kelurahanFilter')?.value || 'Semua';
+            const schoolId = document.getElementById('schoolFilter')?.value || 'Semua';
+            const status = document.getElementById('statusFilter')?.value || 'Semua';
+
+            const filtered = members.filter(m => {
+                const matchQuery = !query ||
+                    (m.name || '').toLowerCase().includes(query) ||
+                    (m.nik || '').toLowerCase().includes(query) ||
+                    (m.kpj || '').toLowerCase().includes(query) ||
+                    (m.kelurahan || '').toLowerCase().includes(query) ||
+                    (m.schoolName || '').toLowerCase().includes(query);
+                const matchSeg = segmen === 'Semua' || m.segmen === segmen;
+                const matchKec = kec === 'Semua' || m.kecamatan === kec;
+                const matchKel = kel === 'Semua' || m.kelurahan === kel;
+                const matchSch = schoolId === 'Semua' || m.schoolId === schoolId;
+                const matchStatus = status === 'Semua' ||
+                    (status === 'Menunggak' ? (m.status === 'Menunggak' || m.status === 'Non-Aktif') : m.status === status);
+                return matchQuery && matchSeg && matchKec && matchKel && matchSch && matchStatus;
+            });
+
+            const countEl = document.getElementById('tableCountInfo');
+            if (countEl) countEl.textContent = `Menampilkan ${filtered.length} dari ${members.length} peserta`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-10 px-6 text-center text-slate-500">Tidak ada data peserta yang sesuai dengan filter pencarian saat ini.</td></tr>`;
+                return;
+            }
+
+            const readOnly = isReadOnlyMode();
+            const stageLabels = {
+                1: '1. Input Data & NIK',
+                2: '2. Kode Iuran Terbit',
+                3: '3. Iuran Perdana Lunas',
+                4: '4. Kartu Digital Aktif'
+            };
+
+            tbody.innerHTML = filtered.map(m => {
+                const displayNik = readOnly && m.nik && m.nik.length >= 10
+                    ? `${m.nik.slice(0, 6)}******${m.nik.slice(-4)}`
+                    : (m.nik || '-');
+
+                const statusBadge = {
+                    'Aktif': 'bg-emerald-100 text-emerald-900 border-emerald-300',
+                    'Proses Verifikasi': 'bg-amber-100 text-amber-900 border-amber-300',
+                    'Menunggak': 'bg-rose-100 text-rose-900 border-rose-300',
+                    'Non-Aktif': 'bg-slate-200 text-slate-800 border-slate-400'
+                }[m.status] || 'bg-slate-100 text-slate-800 border-slate-300';
+
+                const progressPct = Math.min(100, Math.max(25, (Number(m.stage) || 1) * 25));
+
+                return `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3.5 px-6">
+                        <div class="font-extrabold text-slate-900">${m.name}</div>
+                        <div class="text-xs font-mono text-slate-600 mt-0.5">NIK: ${displayNik} • KPJ: ${m.kpj || '-'}</div>
+                        ${m.schoolName ? `<div class="text-[11px] text-teal-800 mt-1"><i class="fas fa-school mr-1"></i>${m.schoolName}</div>` : ''}
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="inline-block px-2 py-0.5 rounded-md text-[11px] bg-indigo-100 text-indigo-900">${m.segmen}</span>
+                        <div class="text-xs text-slate-800 mt-1">Kec. ${m.kecamatan}</div>
+                        <div class="text-[11px] text-slate-600">Kel. ${m.kelurahan}</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <div class="text-xs text-slate-800 mb-1">${stageLabels[m.stage] || '1. Input Data'}</div>
+                        <div class="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full" style="width: ${progressPct}%"></div>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <div class="text-xs font-mono text-slate-900">Rp ${Number(m.iuran || 0).toLocaleString('id-ID')}/bln</div>
+                        <div class="text-[11px] text-slate-600 mt-0.5">${(m.programs || []).join(', ')}</div>
+                    </td>
+                    <td class="py-3.5 px-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs border ${statusBadge}">${m.status}</span>
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                        <div class="inline-flex items-center gap-1.5">
+                            <button onclick="openDetailModal('${m.id}')" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition" title="Detail Kartu">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="sendReminderWA('${m.id}')" class="p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition" title="Kirim Pengingat WA">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            ${readOnly ? '' : `
+                            <button onclick="editMember('${m.id}')" class="p-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition" title="Edit Data">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteMember('${m.id}')" class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 transition" title="Hapus Peserta">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>`}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- GRAFIK D3.JS RESPONSIF ---
+        function renderCharts() {
+            if (typeof d3 === 'undefined') return;
+            renderDonutChart();
+            renderKecamatanBarChart();
+        }
+
+        function renderDonutChart() {
+            const container = document.getElementById('statusDonutChart');
+            const legend = document.getElementById('statusDonutLegend');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const counts = [
+                { label: 'Aktif', value: members.filter(m => m.status === 'Aktif').length, color: '#10b981' },
+                { label: 'Verifikasi', value: members.filter(m => m.status === 'Proses Verifikasi').length, color: '#f59e0b' },
+                { label: 'Menunggak', value: members.filter(m => m.status === 'Menunggak').length, color: '#f43f5e' },
+                { label: 'Non-Aktif', value: members.filter(m => m.status === 'Non-Aktif').length, color: '#64748b' }
+            ];
+
+            const width = Math.max(180, container.clientWidth || 220);
+            const height = 190;
+            const radius = Math.min(width, height) / 2 - 12;
+
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                .attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+            const pie = d3.pie().value(d => d.value).sort(null);
+            const arc = d3.arc().innerRadius(radius * 0.58).outerRadius(radius);
+
+            svg.selectAll('path')
+                .data(pie(counts))
+                .enter()
+                .append('path')
+                .attr('d', arc)
+                .attr('fill', d => d.data.color)
+                .attr('stroke', '#ffffff')
+                .attr('stroke-width', 2);
+
+            svg.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', '-0.1em')
+                .style('font-size', '20px')
+                .style('font-weight', '800')
+                .text(members.length);
+
+            svg.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('dy', '1.2em')
+                .style('font-size', '11px')
+                .text('Total Peserta');
+
+            if (legend) {
+                legend.innerHTML = counts.map(c => `
+                    <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-white/70">
+                        <span class="inline-flex items-center gap-1.5 text-slate-800">
+                            <span class="w-2.5 h-2.5 rounded-full" style="background:${c.color}"></span>${c.label}
+                        </span>
+                        <span class="font-extrabold text-slate-900">${c.value}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderKecamatanBarChart() {
+            const container = document.getElementById('kecamatanBarChart');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const data = Object.keys(KECAMATAN_KELURAHAN).map(kec => {
+                const list = members.filter(m => m.kecamatan === kec);
+                return {
+                    kecamatan: kec,
+                    Aktif: list.filter(m => m.status === 'Aktif').length,
+                    Proses: list.filter(m => m.status === 'Proses Verifikasi').length,
+                    Tunggak: list.filter(m => m.status === 'Menunggak' || m.status === 'Non-Aktif').length
+                };
+            });
+
+            const margin = { top: 16, right: 16, bottom: 34, left: 32 };
+            const width = Math.max(280, (container.clientWidth || 520) - margin.left - margin.right);
+            const height = 210 - margin.top - margin.bottom;
+
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const subgroups = ['Aktif', 'Proses', 'Tunggak'];
+            const colors = { Aktif: '#10b981', Proses: '#f59e0b', Tunggak: '#f43f5e' };
+
+            const x0 = d3.scaleBand().domain(data.map(d => d.kecamatan)).range([0, width]).padding(0.25);
+            const x1 = d3.scaleBand().domain(subgroups).range([0, x0.bandwidth()]).padding(0.08);
+            const maxY = Math.max(3, d3.max(data, d => Math.max(d.Aktif, d.Proses, d.Tunggak)) || 3);
+            const y = d3.scaleLinear().domain([0, maxY]).nice().range([height, 0]);
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x0))
+                .selectAll('text')
+                .style('font-size', '11px')
+                .style('font-weight', '700');
+
+            svg.append('g')
+                .call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('d')))
+                .selectAll('text')
+                .style('font-size', '11px');
+
+            svg.append('g')
+                .selectAll('g')
+                .data(data)
+                .enter()
+                .append('g')
+                .attr('transform', d => `translate(${x0(d.kecamatan)},0)`)
+                .style('cursor', 'pointer')
+                .on('click', (_, d) => filterByKorcab(d.kecamatan, true))
+                .selectAll('rect')
+                .data(d => subgroups.map(key => ({ key, value: d[key] })))
+                .enter()
+                .append('rect')
+                .attr('x', d => x1(d.key))
+                .attr('y', d => y(d.value))
+                .attr('width', x1.bandwidth())
+                .attr('height', d => height - y(d.value))
+                .attr('rx', 4)
+                .attr('fill', d => colors[d.key]);
+        }
+
+        // --- MODAL PESERTA, DETAIL, TARGET, LEMBAGA & EKSPOR ---
+        window.updateFormKelurahanOptions = function (selectedKel = '') {
+            const kec = document.getElementById('memberKecamatan')?.value || 'Serang';
+            const kelEl = document.getElementById('memberKelurahan');
+            if (!kelEl) return;
+            const list = KECAMATAN_KELURAHAN[kec] || [];
+            kelEl.innerHTML = list.map(k => `<option value="${k}">${k}</option>`).join('');
+            if (selectedKel && list.includes(selectedKel)) kelEl.value = selectedKel;
+            updateFormSchoolOptions();
+        };
+
+        window.updateFormSchoolOptions = function (selectedSchoolId = '') {
+            const kec = document.getElementById('memberKecamatan')?.value || 'Serang';
+            const kel = document.getElementById('memberKelurahan')?.value || '';
+            const schEl = document.getElementById('memberSchool');
+            if (!schEl) return;
+            const list = schools.filter(s => s.kecamatan === kec && (!kel || s.kelurahan === kel));
+            schEl.innerHTML = '<option value="">-- Umum / Tidak Terikat Lembaga --</option>' +
+                list.map(s => `<option value="${s.id}">${s.name} (${s.npsn})</option>`).join('');
+            if (selectedSchoolId) schEl.value = selectedSchoolId;
+        };
+
+        window.onFormSchoolChange = function () {
+            const schId = document.getElementById('memberSchool')?.value;
+            const found = schools.find(s => s.id === schId);
+            const jobEl = document.getElementById('memberJob');
+            if (found && jobEl && !jobEl.value) {
+                jobEl.value = `Pendidik / Pengelola ${found.name}`;
+            }
+        };
+
+        window.openModal = function (member = null) {
+            if (isReadOnlyMode()) {
+                showToast('Mode Baca aktif: penambahan atau perubahan data dikunci.', 'warning');
+                return;
+            }
+            const modal = document.getElementById('memberModal');
+            const form = document.getElementById('memberForm');
+            if (!modal || !form) return;
+            form.reset();
+            document.getElementById('memberId').value = member ? member.id : '';
+            document.getElementById('modalTitle').textContent = member ? 'Edit Data Kepesertaan' : 'Formulir Pendaftaran Peserta Baru';
+
+            if (member) {
+                document.getElementById('memberName').value = member.name || '';
+                document.getElementById('memberNik').value = member.nik || '';
+                document.getElementById('memberKpj').value = member.kpj || '';
+                document.getElementById('memberPhone').value = member.phone || '';
+                document.getElementById('memberSegmen').value = member.segmen || 'BPU';
+                document.getElementById('memberKecamatan').value = member.kecamatan || 'Serang';
+                updateFormKelurahanOptions(member.kelurahan);
+                updateFormSchoolOptions(member.schoolId);
+                document.getElementById('memberJob').value = member.job || '';
+                document.getElementById('memberStage').value = member.stage || 1;
+                document.getElementById('memberStatus').value = member.status || 'Proses Verifikasi';
+                document.getElementById('memberIuran').value = member.iuran || 16800;
+                document.getElementById('memberNote').value = member.note || '';
+                document.querySelectorAll('input[name="program"]').forEach(cb => {
+                    cb.checked = (member.programs || []).includes(cb.value);
+                });
+            } else {
+                document.getElementById('memberKecamatan').value = 'Serang';
+                updateFormKelurahanOptions();
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeModal = function () {
+            const modal = document.getElementById('memberModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.saveMember = function (e) {
+            e.preventDefault();
+            if (isReadOnlyMode()) return;
+            const id = document.getElementById('memberId').value;
+            const schoolId = document.getElementById('memberSchool').value;
+            const schoolObj = schools.find(s => s.id === schoolId);
+            const programs = Array.from(document.querySelectorAll('input[name="program"]:checked')).map(cb => cb.value);
+
+            const payload = {
+                id: id || 'm-' + Date.now(),
+                name: document.getElementById('memberName').value.trim(),
+                nik: document.getElementById('memberNik').value.trim(),
+                kpj: document.getElementById('memberKpj').value.trim(),
+                phone: document.getElementById('memberPhone').value.trim(),
+                segmen: document.getElementById('memberSegmen').value,
+                kecamatan: document.getElementById('memberKecamatan').value,
+                kelurahan: document.getElementById('memberKelurahan').value,
+                schoolId: schoolId,
+                schoolName: schoolObj ? schoolObj.name : '',
+                job: document.getElementById('memberJob').value.trim(),
+                programs: programs.length ? programs : ['JKK', 'JKM'],
+                stage: parseInt(document.getElementById('memberStage').value, 10) || 1,
+                status: document.getElementById('memberStatus').value,
+                iuran: parseInt(document.getElementById('memberIuran').value, 10) || 16800,
+                note: document.getElementById('memberNote').value.trim()
+            };
+
+            if (id) {
+                const idx = members.findIndex(m => m.id === id);
+                if (idx > -1) members[idx] = payload;
+                showToast('Data peserta berhasil diperbarui!', 'success');
+            } else {
+                members.unshift(payload);
+                showToast('Peserta baru berhasil didaftarkan!', 'success');
+            }
+
+            saveAllData();
+            closeModal();
+            refreshUI();
+            window.playNavSound('success', 'Data peserta berhasil disimpan');
+        };
+
+        window.editMember = function (id) {
+            const m = members.find(item => item.id === id);
+            if (m) openModal(m);
+        };
+
+        window.deleteMember = function (id) {
+            if (isReadOnlyMode()) return;
+            const idx = members.findIndex(m => m.id === id);
+            if (idx === -1) return;
+            const removed = members.splice(idx, 1)[0];
+            saveAllData();
+            refreshUI();
+            showToast(`Peserta "${removed.name}" dihapus dari daftar.`, 'warning');
+            window.playNavSound('error', 'Data peserta dihapus');
+        };
+
+        window.openDetailModal = function (id) {
+            const m = members.find(item => item.id === id);
+            if (!m) return;
+            const readOnly = isReadOnlyMode();
+            const nikText = readOnly && m.nik && m.nik.length >= 10
+                ? `${m.nik.slice(0, 6)}******${m.nik.slice(-4)}`
+                : m.nik;
+
+            const body = document.getElementById('detailModalBody');
+            if (body) {
+                body.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-900 to-teal-800 text-white shadow-md">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase tracking-wider text-emerald-200">Kartu Kontrol Peserta BPJSTK</span>
+                                <h4 class="text-lg font-extrabold mt-0.5">${m.name}</h4>
+                                <p class="text-xs font-mono text-emerald-200 mt-1">NIK: ${nikText}</p>
+                                <p class="text-xs font-mono text-emerald-200">KPJ: ${m.kpj || 'Belum Terbit'}</p>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-white/20 text-xs font-extrabold">${m.segmen}</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <span class="text-slate-500 block">Wilayah</span>
+                            <strong class="text-slate-900">Kec. ${m.kecamatan}, Kel. ${m.kelurahan}</strong>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <span class="text-slate-500 block">Status & Iuran</span>
+                            <strong class="text-slate-900">${m.status} • Rp ${Number(m.iuran || 0).toLocaleString('id-ID')}</strong>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                        <span class="text-slate-500 block">Lembaga / Profesi</span>
+                        <strong class="text-slate-900">${m.schoolName ? m.schoolName + ' — ' : ''}${m.job}</strong>
+                    </div>
+                    <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs">
+                        <span class="text-amber-800 block">Catatan Koordinator</span>
+                        <strong class="text-amber-950">${m.note || '-'}</strong>
+                    </div>
+                `;
+            }
+            const modal = document.getElementById('detailModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        };
+
+        window.closeDetailModal = function () {
+            const modal = document.getElementById('detailModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.sendReminderWA = function (id) {
+            const m = members.find(item => item.id === id);
+            if (!m) return;
+            const phone = (m.phone || '').replace(/\D/g, '');
+            const waPhone = phone.startsWith('0') ? '62' + phone.slice(1) : phone;
+            const text = `Assalamu'alaikum Bapak/Ibu *${m.name}*, salam hangat dari Koordinator Kepesertaan BPJS Ketenagakerjaan (Kec. ${m.kecamatan}). Kami menginformasikan status kepesertaan Anda saat ini: *${m.status}* (Iuran Rp ${Number(m.iuran || 0).toLocaleString('id-ID')}/bulan). Terima kasih atas perhatiannya.`;
+            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`, '_blank');
+        };
+
+        window.openTargetModal = function () {
+            if (isReadOnlyMode()) {
+                showToast('Mode Baca aktif: pengaturan target dikunci.', 'warning');
+                return;
+            }
+            const input = document.getElementById('targetGoalInput');
+            if (input) input.value = localStorage.getItem(TARGET_KEY) || '500';
+            const modal = document.getElementById('targetModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        };
+
+        window.closeTargetModal = function () {
+            const modal = document.getElementById('targetModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.saveTargetGoal = function (e) {
+            e.preventDefault();
+            const val = parseInt(document.getElementById('targetGoalInput')?.value || '500', 10) || 500;
+            try { localStorage.setItem(TARGET_KEY, String(val)); } catch (err) {}
+            closeTargetModal();
+            updateStats();
+            showToast(`Target akuisisi diperbarui menjadi ${val} peserta aktif!`, 'success');
+        };
+
+        window.openSchoolModal = function (defaultKec = 'Serang', defaultKel = '') {
+            if (isReadOnlyMode()) {
+                showToast('Mode Baca aktif: penambahan lembaga dikunci.', 'warning');
+                return;
+            }
+            const kecEl = document.getElementById('schoolKecamatan');
+            if (kecEl) kecEl.value = defaultKec || 'Serang';
+            updateSchoolModalKelurahan(defaultKel);
+            const modal = document.getElementById('schoolModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        };
+
+        window.updateSchoolModalKelurahan = function (selectedKel = '') {
+            const kec = document.getElementById('schoolKecamatan')?.value || 'Serang';
+            const kelEl = document.getElementById('schoolKelurahan');
+            if (!kelEl) return;
+            const list = KECAMATAN_KELURAHAN[kec] || [];
+            kelEl.innerHTML = list.map(k => `<option value="${k}">${k}</option>`).join('');
+            if (selectedKel && list.includes(selectedKel)) kelEl.value = selectedKel;
+        };
+
+        window.closeSchoolModal = function () {
+            const modal = document.getElementById('schoolModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.saveNewSchool = function (e) {
+            e.preventDefault();
+            const newSchool = {
+                id: 'sch-' + Date.now(),
+                kecamatan: document.getElementById('schoolKecamatan').value,
+                kelurahan: document.getElementById('schoolKelurahan').value,
+                type: document.getElementById('schoolType').value,
+                npsn: document.getElementById('schoolNpsn').value.trim(),
+                name: document.getElementById('schoolNameInput').value.trim().toUpperCase()
+            };
+            schools.push(newSchool);
+            saveAllData();
+            updateSchoolFilterOptions();
+            updateFormSchoolOptions(newSchool.id);
+            closeSchoolModal();
+            showToast(`Lembaga "${newSchool.name}" berhasil ditambahkan!`, 'success');
+        };
+
+        window.exportToCSV = function () {
+            const headers = ['Nama', 'NIK', 'KPJ', 'Telepon', 'Segmen', 'Kecamatan', 'Kelurahan', 'Lembaga', 'Profesi', 'Status', 'Iuran'];
+            const rows = members.map(m => [
+                m.name, `'${m.nik}`, `'${m.kpj || ''}`, `'${m.phone}`, m.segmen,
+                m.kecamatan, m.kelurahan, m.schoolName || '-', m.job, m.status, m.iuran
+            ]);
+            const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Laporan_BPJSTK_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Laporan CSV berhasil diunduh!', 'success');
+        };
+
+        window.downloadJSON = function () {
+            const payload = { exportedAt: new Date().toISOString(), members, schools };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Backup_BPJSTK_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('File backup JSON berhasil diunduh!', 'success');
+        };
+
+        window.triggerImportJSON = function () {
+            if (isReadOnlyMode()) {
+                showToast('Mode Baca aktif: impor JSON dikunci.', 'warning');
+                return;
+            }
+            document.getElementById('jsonFileInput')?.click();
+        };
+
+        window.handleImportJSON = function (event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed.members)) members = parsed.members;
+                    else if (Array.isArray(parsed)) members = parsed;
+                    if (Array.isArray(parsed.schools)) schools = parsed.schools;
+                    saveAllData();
+                    populateFilterDropdowns();
+                    refreshUI();
+                    showToast('Database JSON berhasil diperbarui!', 'success');
+                } catch (err) {
+                    showToast('Format file JSON tidak valid.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        function refreshUI() {
+            updateStats();
+            renderKorcabCards();
+            renderTable();
+            renderCharts();
+        }
+
+        window.addEventListener('resize', () => {
+            if (members.length) renderCharts();
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+            window.setPageTheme(savedTheme);
+            updateDatesAndGreeting();
+            startLiveClock();
+            fetchPrayerTimes();
+            loadAllData();
+            populateFilterDropdowns();
+            refreshUI();
+            await initDeveloperLogo();
+
+            if (isReadOnlyMode()) {
+                const addBtn = document.getElementById('primaryAddBtn');
+                if (addBtn) addBtn.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
